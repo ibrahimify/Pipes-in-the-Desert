@@ -1,0 +1,13 @@
+Expected output includes:
+
+--- Game Setup ---
+How many players? Minimum 4:
+Choose team for Ada:
+Choose team for Grace:
+Choose team for Linus:
+Choose team for Ken:
+Game duration in rounds:
+
+Network initialization output is shown.
+The first active player's turn is shown.
+Result: the game starts successfully with two Plumbers and two Saboteurs.

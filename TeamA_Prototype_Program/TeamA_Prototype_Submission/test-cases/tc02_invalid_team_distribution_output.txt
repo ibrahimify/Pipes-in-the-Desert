@@ -1,0 +1,9 @@
+Expected output includes:
+
+--- Game Setup ---
+Each team must have at least two players.
+Plumbers: 3, Saboteurs: 1
+
+The game returns to the main menu.
+Goodbye!
+Result: invalid team distribution is rejected.

@@ -1,0 +1,12 @@
+Expected output includes:
+
+Linus moves to Pipe 4 and punctures it on a later turn.
+Linus moves back to Pump 3, freeing Pipe 4.
+Ada moves to Pipe 4.
+
+On Ada's later turn:
+Plumber actions:
+2. Repair current pipe
+
+The punctured pipe is repaired.
+Result: Plumber repairs a punctured pipe successfully.

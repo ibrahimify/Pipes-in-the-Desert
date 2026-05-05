@@ -1,0 +1,12 @@
+Expected output includes:
+
+Linus's first Saboteur turn is shown.
+Linus moves from the pump to Pipe 4.
+
+On Linus's next turn:
+Saboteur actions:
+2. Puncture current pipe
+
+The current pipe becomes punctured.
+Saboteur score increases when leaked water is recalculated.
+Result: Saboteur punctures a pipe successfully.

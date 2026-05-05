@@ -9,7 +9,7 @@ Pipes in the Desert is a strategy-based simulation game developed as part of the
 ```
 Pipes-in-the-Desert/
 │
-├── src/                    # Maven config (coming soon)
+├── code /                    # Maven config (coming soon)
 │   ├── main/
 │   │   ├── java/                # Source code
 │   │   └── resources/           # Assets (config, images, etc.)
@@ -25,7 +25,7 @@ Pipes-in-the-Desert/
 │   ├── 5. Skeleton Program.pdf
 │   ├── 6. Concept_of_Prototype.pdf
 │   ├── 7. Detailed_Prototype_Plans.pdf
-│   ├── 10_Prototype_Program.pdf          # Coming soon
+│   ├── 10_Prototype_Program.pdf          
 │   ├── 11_Plans_for_GUI.pdf              # Coming soon
 │   ├── 13_GUI_Program.pdf                # Coming soon
 │   ├── 14_Summary.pdf                    # Coming soon
@@ -38,7 +38,7 @@ Pipes-in-the-Desert/
 ```
 
 
-## Documentation Status (as of April 29)
+## Documentation Status (as of May 5)
 
 Completed:
 - 00 - Cover
@@ -49,9 +49,9 @@ Completed:
 - 06 - Skeleton Program
 - 07 - Prototype Concept
 - 08 - Detailed Prototype Plans
+- 10 - Prototype Program 
 
 Upcoming:
-- 10 - Prototype Program (May 4)
 - 11 - Plans for GUI (May 5)
 - 13 - GUI program (May 26)
 - 14 - Summary (May 29)

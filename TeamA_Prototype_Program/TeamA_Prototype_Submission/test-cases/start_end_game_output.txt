@@ -1,0 +1,909 @@
+Output saved to: test-cases\start_end_game_output.txt
+
+==========================================
+    Welcome to Pipes in the Desert!
+==========================================
+1. Start Game
+2. Instructions
+3. Exit
+Choose an option: 
+--- Game Setup ---
+[Team] Team created: Plumbers
+[Team] Team created: Saboteurs
+How many players? (minimum 4): Player 1 name: Choose team for a:
+  1. Plumber
+  2. Saboteur
+Choice: [Team:Plumbers] addMember() called. Player: a
+[Team:Plumbers] Member added: a. Team size now: 1
+a joined the Plumbers.
+Player 2 name: Choose team for b:
+  1. Plumber
+  2. Saboteur
+Choice: [Team:Saboteurs] addMember() called. Player: b
+[Team:Saboteurs] Member added: b. Team size now: 1
+b joined the Saboteurs.
+Player 3 name: Choose team for c:
+  1. Plumber
+  2. Saboteur
+Choice: [Team:Plumbers] addMember() called. Player: c
+[Team:Plumbers] Member added: c. Team size now: 2
+c joined the Plumbers.
+Player 4 name: Choose team for d:
+  1. Plumber
+  2. Saboteur
+Choice: [Team:Saboteurs] addMember() called. Player: d
+[Team:Saboteurs] Member added: d. Team size now: 2
+d joined the Saboteurs.
+[Team:Plumbers] getSize() called. Size: 2
+[Team:Saboteurs] getSize() called. Size: 2
+Choose game duration:
+  1. 3 minutes (turns)
+  2. 5 minutes (turns)
+Choice: [PipeNetwork] Created empty network.
+[Team:Plumbers] getMembers() called. Member count: 2
+[Team:Plumbers] getMembers() called. Member count: 2
+[Team:Saboteurs] getMembers() called. Member count: 2
+[Team:Saboteurs] getMembers() called. Member count: 2
+
+--- Starting Game ---
+System.startGame()
+System.initializeGame()
+[NetworkElement] Created element with id: 1
+[Spring:1] Created with waterOutput: 10
+[NetworkElement] Created element with id: 2
+[Cistern:2] Created.
+[NetworkElement] Created element with id: 3
+[Pump:3] Created. connectionLimit: 4
+[NetworkElement] Created element with id: 4
+[Pipe:4] Created. capacity: 10
+[NetworkElement] Created element with id: 5
+[Pipe:5] Created. capacity: 10
+[PipeNetwork] addElement() called.
+[PipeNetwork] Element added: Spring (id: 1). Total elements: 1
+[PipeNetwork] addElement() called.
+[PipeNetwork] Element added: Cistern (id: 2). Total elements: 2
+[PipeNetwork] addElement() called.
+[PipeNetwork] Element added: Pump (id: 3). Total elements: 3
+[PipeNetwork] addElement() called.
+[PipeNetwork] Element added: Pipe (id: 4). Total elements: 4
+[PipeNetwork] addElement() called.
+[PipeNetwork] Element added: Pipe (id: 5). Total elements: 5
+[PipeNetwork] connectElements() called.
+[NetworkElement:1] addNeighbor() called.
+[NetworkElement:1] Neighbor added: 4
+[NetworkElement:4] addNeighbor() called.
+[NetworkElement:4] Neighbor added: 1
+[PipeNetwork] Connected Spring (id: 1) <-> Pipe (id: 4).
+[PipeNetwork] connectElements() called.
+[NetworkElement:4] addNeighbor() called.
+[NetworkElement:4] Neighbor added: 3
+[NetworkElement:3] addNeighbor() called.
+[NetworkElement:3] Neighbor added: 4
+[Pump:3] addConnectedPipe() called.
+[Pump:3] canAcceptConnection() called. Connected: 0, Limit: 4
+[Pump:3] Pipe connected successfully. Connected pipe count: 1
+[PipeNetwork] Connected Pipe (id: 4) <-> Pump (id: 3).
+[PipeNetwork] connectElements() called.
+[NetworkElement:3] addNeighbor() called.
+[NetworkElement:3] Neighbor added: 5
+[NetworkElement:5] addNeighbor() called.
+[NetworkElement:5] Neighbor added: 3
+[Pump:3] addConnectedPipe() called.
+[Pump:3] canAcceptConnection() called. Connected: 1, Limit: 4
+[Pump:3] Pipe connected successfully. Connected pipe count: 2
+[PipeNetwork] Connected Pump (id: 3) <-> Pipe (id: 5).
+[PipeNetwork] connectElements() called.
+[NetworkElement:5] addNeighbor() called.
+[NetworkElement:5] Neighbor added: 2
+[NetworkElement:2] addNeighbor() called.
+[NetworkElement:2] Neighbor added: 5
+[PipeNetwork] Connected Pipe (id: 5) <-> Cistern (id: 2).
+[Spring:1] setOutputPipe() called.
+[Pump:3] addConnectedPipe() called.
+[Pump:3] addConnectedPipe() – pipe already connected.
+[Pump:3] addConnectedPipe() called.
+[Pump:3] addConnectedPipe() – pipe already connected.
+[Pump:3] setDirection() called.
+[Pump:3] Direction updated successfully.
+[Team:Plumbers] getMembers() called. Member count: 2
+[Team:Plumbers] getMembers() called. Member count: 2
+[Team:Saboteurs] getMembers() called. Member count: 2
+[Team:Saboteurs] getMembers() called. Member count: 2
+[Player:a] setPosition() called. New position: Pump
+[Player:c] setPosition() called. New position: Pump
+[Player:b] setPosition() called. New position: Pump
+[Player:d] setPosition() called. New position: Pump
+GameTimer.start()
+[Player:a] startTurn() called. Resetting hasActedThisTurn to false.
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 10
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- a's turn (Plumber) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:a] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Repair Pipe
+  3. Repair Pump
+  4. Change Pump Direction
+  5. Connect Pipe End
+  6. Disconnect Pipe End
+  7. Pick Up Pump from Cistern
+  8. Pick Up Pipe from Cistern
+  9. Insert Pump into Pipe
+ 10. Place New Pipe
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:a] endTurn() called. Setting hasActedThisTurn to true.
+[Player:c] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 10 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 3
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 20
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- c's turn (Plumber) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:c] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Repair Pipe
+  3. Repair Pump
+  4. Change Pump Direction
+  5. Connect Pipe End
+  6. Disconnect Pipe End
+  7. Pick Up Pump from Cistern
+  8. Pick Up Pipe from Cistern
+  9. Insert Pump into Pipe
+ 10. Place New Pipe
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:c] endTurn() called. Setting hasActedThisTurn to true.
+[Player:b] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 20 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 3
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 30
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- b's turn (Saboteur) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:b] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Puncture Pipe
+  3. Change Pump Direction
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:b] endTurn() called. Setting hasActedThisTurn to true.
+[Player:d] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 30 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 3
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 40
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- d's turn (Saboteur) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:d] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Puncture Pipe
+  3. Change Pump Direction
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:d] endTurn() called. Setting hasActedThisTurn to true.
+[Player:a] startTurn() called. Resetting hasActedThisTurn to false.
+GameTimer.tick()
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 40 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 2
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 50
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- a's turn (Plumber) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:a] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Repair Pipe
+  3. Repair Pump
+  4. Change Pump Direction
+  5. Connect Pipe End
+  6. Disconnect Pipe End
+  7. Pick Up Pump from Cistern
+  8. Pick Up Pipe from Cistern
+  9. Insert Pump into Pipe
+ 10. Place New Pipe
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:a] endTurn() called. Setting hasActedThisTurn to true.
+[Player:c] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 50 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 2
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 60
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- c's turn (Plumber) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:c] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Repair Pipe
+  3. Repair Pump
+  4. Change Pump Direction
+  5. Connect Pipe End
+  6. Disconnect Pipe End
+  7. Pick Up Pump from Cistern
+  8. Pick Up Pipe from Cistern
+  9. Insert Pump into Pipe
+ 10. Place New Pipe
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:c] endTurn() called. Setting hasActedThisTurn to true.
+[Player:b] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 60 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 2
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 70
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- b's turn (Saboteur) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:b] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Puncture Pipe
+  3. Change Pump Direction
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:b] endTurn() called. Setting hasActedThisTurn to true.
+[Player:d] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 70 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 2
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 80
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- d's turn (Saboteur) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:d] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Puncture Pipe
+  3. Change Pump Direction
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:d] endTurn() called. Setting hasActedThisTurn to true.
+[Player:a] startTurn() called. Resetting hasActedThisTurn to false.
+GameTimer.tick()
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 80 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 1
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 90
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- a's turn (Plumber) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:a] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Repair Pipe
+  3. Repair Pump
+  4. Change Pump Direction
+  5. Connect Pipe End
+  6. Disconnect Pipe End
+  7. Pick Up Pump from Cistern
+  8. Pick Up Pipe from Cistern
+  9. Insert Pump into Pipe
+ 10. Place New Pipe
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:a] endTurn() called. Setting hasActedThisTurn to true.
+[Player:c] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 90 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 1
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 100
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- c's turn (Plumber) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:c] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Repair Pipe
+  3. Repair Pump
+  4. Change Pump Direction
+  5. Connect Pipe End
+  6. Disconnect Pipe End
+  7. Pick Up Pump from Cistern
+  8. Pick Up Pipe from Cistern
+  9. Insert Pump into Pipe
+ 10. Place New Pipe
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:c] endTurn() called. Setting hasActedThisTurn to true.
+[Player:b] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 100 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 1
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 110
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- b's turn (Saboteur) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:b] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Puncture Pipe
+  3. Change Pump Direction
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:b] endTurn() called. Setting hasActedThisTurn to true.
+[Player:d] startTurn() called. Resetting hasActedThisTurn to false.
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 110 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 1
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME TICK ==========
+System.updateRoundEvents()
+System.requestComponentGeneration()
+Generate new pipe at cistern? (yes/no): Generate new pump at cistern? (yes/no): [PipeNetwork] getWorkingPumps() called.
+[Pump:3] isBroken() called. broken: false
+[PipeNetwork] Working pumps: 1 out of 1 total.
+Trigger random pump breakdown? (yes/no): WaterFlowManager.recalculateFlow()
+WaterFlowManager.processSpring(spring)
+[Spring:1] produceWater() called. Produced water: 10
+[Spring:1] getOutputPipe() called.
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[NetworkElement:4] getNeighbors() called.
+[Pump:3] isBroken() called. broken: false
+[Pump:3] canTransferWater() called.
+[Pump:3] canTransferWater = true
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[NetworkElement:5] getNeighbors() called.
+[Cistern:2] receiveWater() called. Amount: 10
+[Cistern:2] Water received successfully. Total stored water: 120
+WaterFlowManager.registerDeliveredWater(10)
+ScoreBoard.addDeliveredWater(10)
+System.getCurrentPlayer()
+
+--- d's turn (Saboteur) ---
+
+=== Network Status ===
+  Spring (ID:1)
+  Cistern (ID:2) [Pipes:0 Pumps:0]
+[Pump:3] isBroken() called. broken: false
+  Pump (ID:3) [OK]
+[Pipe:4] isPunctured() called. punctured: false
+[Pipe:4] hasFreeEnd() called. freeEnd: false
+[Pipe:4] isOccupied() called. occupied: false
+  Pipe (ID:4) [OK]
+[Pipe:5] isPunctured() called. punctured: false
+[Pipe:5] hasFreeEnd() called. freeEnd: false
+[Pipe:5] isOccupied() called. occupied: false
+  Pipe (ID:5) [OK]
+======================
+[Player:d] getPosition() called. Position: Pump
+Current position: Pump (ID: 3)
+Actions:
+  1. Move
+  2. Puncture Pipe
+  3. Change Pump Direction
+  0. End Turn (no action)
+Choose action: Turn ended without action.
+System.nextTurn()
+[Player:d] endTurn() called. Setting hasActedThisTurn to true.
+[Player:a] startTurn() called. Resetting hasActedThisTurn to false.
+GameTimer.tick()
+
+ScoreBoard.getPlumberScore()
+ScoreBoard.getSaboteurScore()
+[Scores] Plumbers: 120 | Saboteurs: 0
+GameTimer.getRemainingTime()
+[Timer] Remaining: 0
+System.checkEndCondition()
+GameTimer.hasExpired()
+
+========== GAME OVER ==========
+System.endGame()
+GameTimer.stop()
+ScoreBoard.determineWinner()
+[Team:Plumbers] getName() called. Name: Plumbers
+Winner: Plumbers
+
+==========================================
+    Welcome to Pipes in the Desert!
+==========================================
+1. Start Game
+2. Instructions
+3. Exit
+Choose an option: Goodbye!

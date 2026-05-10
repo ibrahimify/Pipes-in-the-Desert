@@ -7,34 +7,25 @@ Pipes in the Desert is a strategy-based simulation game developed as part of the
 
 ## Project Structure
 ```
-Pipes-in-the-Desert/
+Pipes in the Desert/
 │
-├── code /                    # Maven config (coming soon)
-│   ├── main/
-│   │   ├── java/                # Source code
-│   │   └── resources/           # Assets (config, images, etc.)
-│   └── test/
-│       └── java/                # Unit tests 
+├── code/
+│   ├── src/
+│   │   ├── main/
+│   │   │   └── java/
+│   │   │       └── app/           # Application source code
+│   │   └── test/
+│   │       ├── java/
+│   │       │   └── app/           # Prototype test harness
+│   │       └── resources/
+│   │           └── test-cases/    # Input/output scenario files
+│   ├── scripts/                   # Build and test automation scripts
+│   └── target/                    # Compiled classes (generated)
 │
-├── documentation/
-│   ├── 0. cover.doc
-│   ├── 1. Requirements Documentation.pdf
-│   ├── 2. Analysis Model.pdf
-│   ├── 3. Analysis_Model_Final.pdf
-│   ├── 4. Planning_The_Skeleton.pdf
-│   ├── 5. Skeleton Program.pdf
-│   ├── 6. Concept_of_Prototype.pdf
-│   ├── 7. Detailed_Prototype_Plans.pdf
-│   ├── 10_Prototype_Program.pdf          
-│   ├── 11_Plans_for_GUI.pdf              # Coming soon
-│   ├── 13_GUI_Program.pdf                # Coming soon
-│   ├── 14_Summary.pdf                    # Coming soon
-│
-├── docs/                       # Static_Structure_Diagram
-│
-├── pom.xml                    # Maven config
-├── README.md
-└── .gitignore
+├── documentation/                 # Milestone PDFs and reports
+├── docs/                          # Static structure diagram
+├── archive/                       # Archived historical/legacy snapshots
+└── README.md
 ```
 
 
@@ -62,21 +53,22 @@ Upcoming:
 
 Requirements:
 - Java (JDK 17+)
-- Maven
 
 (1) Build:
-```
-mvn compile
+```powershell
+cd code
+.\scripts\compile.ps1
 ```
 
-(2) Run:
-```
-mvn exec:java
+(2) Run prototype tests:
+```powershell
+cd code
+.\scripts\run-tests.ps1
 ```
 
 (3) VS Code:
 ```
-Open Main.java and press F5
+Open code/src/main/java/app/Main.java and press F5
 ```
 
 

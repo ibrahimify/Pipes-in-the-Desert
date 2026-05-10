@@ -41,9 +41,9 @@ Completed:
 - 07 - Prototype Concept
 - 08 - Detailed Prototype Plans
 - 10 - Prototype Program 
+- 11 - Plans for GUI
 
 Upcoming:
-- 11 - Plans for GUI (May 5)
 - 13 - GUI program (May 26)
 - 14 - Summary (May 29)
 

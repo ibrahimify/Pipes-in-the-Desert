@@ -1,0 +1,10 @@
+# Java build output
+code/target/
+**/*.class
+
+# IDE and OS files
+.vscode/
+.idea/
+*.iml
+Thumbs.db
+.DS_Store

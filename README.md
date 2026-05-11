@@ -78,7 +78,7 @@ This repository contains the project of Team A under the supervision of Dr. Ball
 | Name                   | GitHub                              | Code   | Email |
 |------------------------|---------------------------------------------|--------|-------|
 | Muhammad Ibrahim Shoeb | [ibrahimify](https://github.com/ibrahimify) | OZLVV3 | muhammadibrahimshoeb@gmail.com |
-| Arda Gecegörür         | [Arda-23](https://github.com/Arda-23)       | EKQNAK | ardagecegorur@gmail.com |
+| Arda Gecegörür         | [Arda-23](https://github.com/ardagecegorur)       | EKQNAK | ardagecegorur@gmail.com |
 | Ilgın Tunç             | [ilgintunc](https://github.com/ilgintunc)   | TDQWFF | ilgintunc11@gmail.com |
 | Muhammad Hameez Khan   | [Hameez1khan](https://github.com/Hameez1khan)| TFBB32 | hameezkhan993@gmail.com |
 | Yahya Akhrikhar        | [yahyaakh](https://github.com/yahyaakh)     | K20UXP | yahyaakhrikhar02@gmail.com |

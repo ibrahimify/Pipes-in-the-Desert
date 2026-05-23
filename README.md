@@ -23,7 +23,7 @@ Pipes in the Desert/
 │   └── target/                    # Compiled classes (generated)
 │
 ├── documentation/                 # Milestone PDFs and reports
-├── docs/                          # Static structure diagram
+├── assets/                        # Assets are put in a folder
 ├── archive/                       # Archived historical/legacy snapshots
 └── README.md
 ```

@@ -1,6 +1,11 @@
 # Java build output
+target/
 code/target/
 **/*.class
+
+# Packaged release artifacts
+release/
+*.zip
 
 # IDE and OS files
 .vscode/

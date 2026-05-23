@@ -45,10 +45,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.border.AbstractBorder;
 
 /**
  * Final graphical user interface for the Pipes in the Desert game.
@@ -148,6 +148,9 @@ public class FinalGuiMain extends JFrame {
     /** Visual rotation state for pipe sprites. */
     private final Map<Pipe, Integer> pipeRotations;
 
+    /** Visual rotation state for pump sprites in 90 degree steps. */
+    private final Map<Pump, Integer> pumpRotations;
+
     /** Timer that refreshes the HUD. */
     private Timer refreshTimer;
 
@@ -186,6 +189,7 @@ public class FinalGuiMain extends JFrame {
         this.activeTool = Tool.SELECT;
         this.elementTiles = new LinkedHashMap<>();
         this.pipeRotations = new HashMap<>();
+        this.pumpRotations = new HashMap<>();
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1280, 720));
@@ -237,7 +241,7 @@ public class FinalGuiMain extends JFrame {
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridy = 0;
-        gbc.insets = new Insets(0, 0, 12, 0);
+        gbc.insets = new Insets(0, 0, 34, 0);
         content.add(title, gbc);
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 0, 24, 0);
@@ -246,7 +250,9 @@ public class FinalGuiMain extends JFrame {
         gbc.insets = new Insets(0, 0, 0, 0);
         content.add(buttons, gbc);
 
-        panel.add(content, new GridBagConstraints());
+        GridBagConstraints pageGbc = new GridBagConstraints();
+        pageGbc.insets = new Insets(-120, 0, 0, 0);
+        panel.add(content, pageGbc);
         return panel;
     }
 
@@ -276,7 +282,13 @@ public class FinalGuiMain extends JFrame {
         text.setForeground(new Color(248, 231, 181));
         text.setFont(readableFont(16f, Font.PLAIN));
         text.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
-        card.add(text, BorderLayout.CENTER);
+        JScrollPane instructionScroll = new JScrollPane(text);
+        instructionScroll.setOpaque(false);
+        instructionScroll.getViewport().setOpaque(false);
+        instructionScroll.setBorder(null);
+        instructionScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        instructionScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        card.add(instructionScroll, BorderLayout.CENTER);
 
         JPanel bottom = new JPanel();
         bottom.setOpaque(false);
@@ -503,7 +515,11 @@ public class FinalGuiMain extends JFrame {
         statusArea.setForeground(new Color(239, 220, 164));
         statusArea.setFont(readableFont(13f, Font.PLAIN));
         left.add(title, BorderLayout.NORTH);
-        left.add(new JScrollPane(statusArea), BorderLayout.CENTER);
+        JScrollPane statusScroll = new JScrollPane(statusArea);
+        statusScroll.setBorder(null);
+        statusScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        statusScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        left.add(statusScroll, BorderLayout.CENTER);
         return left;
     }
 
@@ -573,9 +589,26 @@ public class FinalGuiMain extends JFrame {
      * @param tool tool to activate
      */
     private void addTool(JPanel toolbar, String text, Tool tool) {
-        JButton button = pixelButton(text);
+        JButton button = pixelButton(shortToolText(text));
+        button.setToolTipText(text);
         button.addActionListener(e -> activateTool(tool));
         toolbar.add(button);
+    }
+
+    /**
+     * Keeps long toolbar labels inside fixed-width buttons.
+     *
+     * @param text original button text
+     * @return display text
+     */
+    private String shortToolText(String text) {
+        if ("Change Pump Direction".equals(text)) {
+            return "Pump Direction";
+        }
+        if ("Disconnect Pipe".equals(text)) {
+            return "Detach Pipe";
+        }
+        return text;
     }
 
     /**
@@ -629,6 +662,7 @@ public class FinalGuiMain extends JFrame {
     private void initializeGridPositions() {
         elementTiles.clear();
         pipeRotations.clear();
+        pumpRotations.clear();
         for (NetworkElement element : network.getElements()) {
             if (element instanceof Spring) {
                 elementTiles.put(element, new Tile(1, 3));
@@ -636,6 +670,7 @@ public class FinalGuiMain extends JFrame {
                 elementTiles.put(element, new Tile(9, 3));
             } else if (element instanceof Pump) {
                 elementTiles.put(element, new Tile(5, 3));
+                pumpRotations.put((Pump) element, 0);
             } else if (element instanceof Pipe && element.getId() == 4) {
                 elementTiles.put(element, new Tile(3, 3));
                 pipeRotations.put((Pipe) element, 0);
@@ -802,6 +837,10 @@ public class FinalGuiMain extends JFrame {
                 setMessage("New pipes are manufactured at cisterns. Select the cistern first.");
                 return;
             }
+            if (!currentPlayerCanReach(element)) {
+                setMessage("Add Pipe requires the plumber to stand next to the cistern network.");
+                return;
+            }
             selectedElement = element;
             setMessage("Cistern selected. Click an adjacent empty tile to place the new pipe.");
             return;
@@ -846,6 +885,7 @@ public class FinalGuiMain extends JFrame {
         pipeRotations.remove(oldPipe);
 
         elementTiles.put(pump, baseTile);
+        pumpRotations.put(pump, 0);
         selectedElement = pump;
         placeNewPipeSegmentsAround(pump, baseTile);
         consumeCurrentTurn("Pump added into the selected pipe.");
@@ -858,9 +898,10 @@ public class FinalGuiMain extends JFrame {
      * @param baseTile pump tile
      */
     private void placeNewPipeSegmentsAround(Pump pump, Tile baseTile) {
+        int index = 0;
         for (Pipe pipe : pump.getConnectedPipes()) {
             if (!elementTiles.containsKey(pipe)) {
-                Tile tile = firstFreeAdjacent(baseTile);
+                Tile tile = freeTileForSegment(baseTile, index++);
                 elementTiles.put(pipe, tile);
                 pipeRotations.put(pipe, 0);
             }
@@ -880,6 +921,10 @@ public class FinalGuiMain extends JFrame {
             setMessage("Select a pipe to remove.");
             return;
         }
+        if (!currentPlayerCanReach(element)) {
+            setMessage("Remove Pipe requires the plumber to stand on or next to the pipe.");
+            return;
+        }
         network.removeElement(element);
         elementTiles.remove(element);
         pipeRotations.remove(element);
@@ -897,6 +942,16 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         if (element instanceof Pipe) {
+            if (!currentPlayerCanReach(element)) {
+                setMessage("Connect Pipe requires the plumber to stand on or next to the pipe.");
+                return;
+            }
+            Pipe clickedPipe = (Pipe) element;
+            if (!clickedPipe.hasFreeEnd()) {
+                selectedElement = null;
+                setMessage("That pipe has no free end. Disconnect it first, or use a newly added free pipe.");
+                return;
+            }
             selectedElement = element;
             setMessage("Free-end pipe selected. Click an adjacent element to connect it.");
             return;
@@ -907,6 +962,10 @@ public class FinalGuiMain extends JFrame {
         }
 
         Pipe pipe = (Pipe) selectedElement;
+        if (!currentPlayerCanReach(pipe)) {
+            setMessage("Connect Pipe requires the plumber to stand on or next to the selected pipe.");
+            return;
+        }
         if (!pipe.hasFreeEnd()) {
             setMessage("Selected pipe has no free end.");
             return;
@@ -934,6 +993,10 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         if (element instanceof Pipe && !(selectedElement instanceof Pipe)) {
+            if (!currentPlayerCanReach(element)) {
+                setMessage("Disconnect Pipe requires the plumber to stand on or next to the pipe.");
+                return;
+            }
             selectedElement = element;
             setMessage("Pipe selected. Click one connected neighbor to disconnect it.");
             return;
@@ -944,6 +1007,10 @@ public class FinalGuiMain extends JFrame {
         }
 
         Pipe pipe = (Pipe) selectedElement;
+        if (!currentPlayerCanReach(pipe)) {
+            setMessage("Disconnect Pipe requires the plumber to stand on or next to the selected pipe.");
+            return;
+        }
         if (!network.areAdjacent(pipe, element)) {
             setMessage("That element is not connected to the selected pipe.");
             return;
@@ -1021,8 +1088,13 @@ public class FinalGuiMain extends JFrame {
             setMessage("Select a pump to remove.");
             return;
         }
+        if (!currentPlayerCanReach(element)) {
+            setMessage("Remove Pump requires the plumber to stand on or next to the pump.");
+            return;
+        }
         network.removeElement(element);
         elementTiles.remove(element);
+        pumpRotations.remove(element);
         selectedElement = null;
         consumeCurrentTurn("Pump removed. Adjacent pipes now have free ends.");
     }
@@ -1087,6 +1159,7 @@ public class FinalGuiMain extends JFrame {
         Pipe input = pump.getActiveInput() == connected.get(0) ? connected.get(1) : connected.get(0);
         Pipe output = input == connected.get(0) ? connected.get(1) : connected.get(0);
         pump.setDirection(input, output);
+        pumpRotations.put(pump, (pumpRotations.getOrDefault(pump, 0) + 1) % 4);
         consumeCurrentTurn("Pump direction changed.");
     }
 
@@ -1159,6 +1232,31 @@ public class FinalGuiMain extends JFrame {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Checks local reachability from the current player's position.
+     *
+     * @param element target element
+     * @return true if the current player stands on or next to the element
+     */
+    private boolean currentPlayerCanReach(NetworkElement element) {
+        Player player = gameSystem.getCurrentPlayer();
+        if (player == null || element == null || player.getPosition() == null) {
+            return false;
+        }
+        NetworkElement position = player.getPosition();
+        if (position == element || position.isAdjacentTo(element)) {
+            return true;
+        }
+        if (element instanceof Cistern) {
+            for (NetworkElement neighbor : element.getNeighbors()) {
+                if (position == neighbor || position.isAdjacentTo(neighbor)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -1237,14 +1335,14 @@ public class FinalGuiMain extends JFrame {
         overlay.setOpaque(false);
 
         JPanel card = new JPanel(new GridBagLayout());
-        card.setPreferredSize(new Dimension(620, 390));
+        card.setPreferredSize(new Dimension(720, 420));
         card.setBackground(new Color(13, 15, 18, 244));
         card.setBorder(retroPanelBorder(4, 22));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridy = 0;
         gbc.insets = new Insets(4, 0, 8, 0);
-        card.add(titleLabel(result.toUpperCase(), 30), gbc);
+        card.add(titleLabel(result.toUpperCase(), 24), gbc);
 
         gbc.gridy = 1;
         card.add(subtitleLabel("FINAL SCORES"), gbc);
@@ -1442,6 +1540,26 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
+     * Finds a stable visual position for a new pump split segment.
+     *
+     * @param origin pump tile
+     * @param index segment index
+     * @return free tile near the pump
+     */
+    private Tile freeTileForSegment(Tile origin, int index) {
+        int[][] preferred = index == 0
+                ? new int[][] {{-1, 0}, {0, -1}, {0, 1}, {1, 0}}
+                : new int[][] {{1, 0}, {0, 1}, {0, -1}, {-1, 0}};
+        for (int[] offset : preferred) {
+            Tile tile = new Tile(origin.col + offset[0], origin.row + offset[1]);
+            if (tile.isInside() && elementAt(tile) == null) {
+                return tile;
+            }
+        }
+        return firstFreeAdjacent(origin);
+    }
+
+    /**
      * Returns the element located on a tile.
      *
      * @param tile tile to inspect
@@ -1538,8 +1656,31 @@ public class FinalGuiMain extends JFrame {
         JLabel label = new JLabel(text);
         label.setForeground(new Color(255, 207, 65));
         label.setFont(uiFont(size, Font.BOLD));
-        label.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
+        label.setHorizontalAlignment(JLabel.CENTER);
+        label.setVerticalAlignment(JLabel.CENTER);
+        label.setBorder(BorderFactory.createEmptyBorder(18, 10, 18, 10));
+        Dimension sizeHint = textSize(label.getFont(), text, size);
+        label.setPreferredSize(sizeHint);
+        label.setMinimumSize(sizeHint);
         return label;
+    }
+
+    /**
+     * Computes a generous label size for pixel-font headings.
+     *
+     * @param font font to measure
+     * @param text label text
+     * @param requestedSize requested font size
+     * @return label size that avoids clipping
+     */
+    private Dimension textSize(Font font, String text, int requestedSize) {
+        BufferedImage scratch = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = scratch.createGraphics();
+        g.setFont(font);
+        int width = g.getFontMetrics().stringWidth(text) + 48;
+        int height = Math.max(g.getFontMetrics().getHeight() + 44, requestedSize * 2);
+        g.dispose();
+        return new Dimension(width, height);
     }
 
     /**
@@ -1774,6 +1915,28 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
+     * Draws a sprite rotated around its center.
+     *
+     * @param g graphics context
+     * @param image image to draw
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param width draw width
+     * @param height draw height
+     * @param angle rotation angle in radians
+     */
+    private static void drawRotatedPixelImage(Graphics2D g, BufferedImage image,
+            int x, int y, int width, int height, double angle) {
+        if (image == null) {
+            return;
+        }
+        Graphics2D copy = (Graphics2D) g.create();
+        copy.rotate(angle, x + width / 2.0, y + height / 2.0);
+        drawPixelImage(copy, image, x, y, width, height);
+        copy.dispose();
+    }
+
+    /**
      * Returns the first available image among the requested keys.
      *
      * @param keys image keys
@@ -1903,6 +2066,13 @@ public class FinalGuiMain extends JFrame {
             for (int y = 0; y <= getHeight(); y += TILE_SIZE) {
                 g.drawLine(0, y, getWidth(), y);
             }
+            g.setColor(new Color(95, 60, 25, 75));
+            for (int x = TILE_SIZE; x < getWidth(); x += TILE_SIZE) {
+                g.drawLine(x + 1, 0, x + 1, getHeight());
+            }
+            for (int y = TILE_SIZE; y < getHeight(); y += TILE_SIZE) {
+                g.drawLine(0, y + 1, getWidth(), y + 1);
+            }
         }
 
         /**
@@ -2012,8 +2182,14 @@ public class FinalGuiMain extends JFrame {
                 Dimension size = spriteSize(element);
                 Point center = tile.center();
                 if (sprite != null) {
-                    drawPixelImage(g, sprite, center.x - size.width / 2,
-                            center.y - size.height / 2, size.width, size.height);
+                    if (element instanceof Pump) {
+                        drawRotatedPixelImage(g, sprite, center.x - size.width / 2,
+                                center.y - size.height / 2, size.width, size.height,
+                                pumpRotations.getOrDefault((Pump) element, 0) * Math.PI / 2.0);
+                    } else {
+                        drawPixelImage(g, sprite, center.x - size.width / 2,
+                                center.y - size.height / 2, size.width, size.height);
+                    }
                 } else {
                     g.setColor(Color.LIGHT_GRAY);
                     g.fillOval(center.x - 20, center.y - 20, 40, 40);
@@ -2052,7 +2228,7 @@ public class FinalGuiMain extends JFrame {
                     g.setColor(player instanceof Plumber ? Color.BLUE : Color.DARK_GRAY);
                     g.fillOval(x, y, 24, 24);
                 }
-                drawPlayerName(g, player.getName(), x + 21, y - 4);
+                drawPlayerName(g, player, x + 21, y - 4);
             }
         }
 
@@ -2064,14 +2240,15 @@ public class FinalGuiMain extends JFrame {
          * @param centerX horizontal center
          * @param y text baseline area
          */
-        private void drawPlayerName(Graphics2D g, String name, int centerX, int y) {
+        private void drawPlayerName(Graphics2D g, Player player, int centerX, int y) {
+            String name = player.getName();
             String text = name == null ? "" : name;
             g.setFont(readableFont(8f, Font.BOLD));
             int width = g.getFontMetrics().stringWidth(text) + 6;
             int height = 12;
             g.setColor(new Color(0, 0, 0, 170));
             g.fillRoundRect(centerX - width / 2, y - height, width, height, 5, 5);
-            g.setColor(Color.WHITE);
+            g.setColor(player instanceof Plumber ? new Color(72, 177, 255) : new Color(244, 72, 57));
             g.drawString(text, centerX - width / 2 + 3, y - 3);
         }
 

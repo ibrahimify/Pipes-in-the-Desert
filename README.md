@@ -43,9 +43,6 @@ Completed:
 - 10 - Prototype Program 
 - 11 - Plans for GUI
 
-Upcoming:
-- 13 - GUI program (May 26)
-- 14 - Summary (May 29)
 
 
 
@@ -124,6 +121,6 @@ The system simulates a water transport network consisting of pipes, pumps, sprin
 - [Problem Definition](https://www.iit.bme.hu/targyak/BMEVIIIAB02/problem-definition)  
 - [Deadlines](https://www.iit.bme.hu/targyak/BMEVIIIAB02/schedule)  
 - [Document Templates](https://www.iit.bme.hu/file/1006/document-templates)  
--
+
 
 

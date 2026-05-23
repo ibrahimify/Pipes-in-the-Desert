@@ -1,0 +1,14 @@
+Expected output includes:
+
+After a full round, the cistern has generated components.
+Ada's next turn is shown.
+Plumber actions:
+7. Pick up pump from reachable cistern
+
+Reachable cisterns:
+Cistern 2
+Cistern ID:
+
+The generated pump count decreases.
+The Plumber carries the selected pump.
+Result: generated component pickup succeeds.

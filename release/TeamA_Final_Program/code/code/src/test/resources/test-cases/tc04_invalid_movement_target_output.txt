@@ -1,0 +1,9 @@
+Expected output includes:
+
+Ada's turn is shown.
+Available destinations are listed.
+Target ID:
+Action was not completed. Choose again.
+
+The player enters Spring 1 as the target, which is not a valid player position.
+Result: invalid movement target is rejected.

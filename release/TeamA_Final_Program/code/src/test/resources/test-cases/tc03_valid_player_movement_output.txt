@@ -1,0 +1,9 @@
+Expected output includes:
+
+Ada's turn is shown.
+Available destinations are listed.
+Target ID:
+
+The player chooses Pipe 4.
+Scores are printed after the turn.
+Result: valid movement from the starting pump to an adjacent pipe succeeds.

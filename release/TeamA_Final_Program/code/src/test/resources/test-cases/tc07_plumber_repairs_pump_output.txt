@@ -1,0 +1,9 @@
+Expected output includes:
+
+The Plumber is standing on the broken pump.
+Plumber actions:
+3. Repair current pump
+
+The pump changes from broken state to working state.
+The Plumber's turn is completed.
+Result: Plumber repairs a broken pump successfully.

@@ -1,0 +1,12 @@
+Expected output includes:
+
+Ada's turn is shown.
+Plumber actions:
+4. Change current pump direction
+
+Connected pipes are listed.
+Input pipe index:
+Output pipe index:
+
+The selected input and output are accepted.
+Result: pump direction changes successfully.

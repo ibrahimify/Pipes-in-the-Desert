@@ -1,0 +1,11 @@
+Expected output includes:
+
+The game starts with a valid four-player distribution.
+Players take turns until the timer end condition is reached.
+
+========== GAME OVER ==========
+Winner:
+
+The program returns to the main menu.
+Goodbye!
+Result: end game and winner declaration are shown.

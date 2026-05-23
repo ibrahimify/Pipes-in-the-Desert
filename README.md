@@ -29,7 +29,7 @@ Pipes in the Desert/
 ```
 
 
-## Documentation Status (as of May 5)
+## Documentation Status (as of May 23)
 
 Completed:
 - 00 - Cover
@@ -42,8 +42,10 @@ Completed:
 - 08 - Detailed Prototype Plans
 - 10 - Prototype Program 
 - 11 - Plans for GUI
+- 13 - GUI program 
 
-
+Upcoming
+- 14 - Summary (May 29)
 
 
 ## Build & Run

@@ -24,13 +24,13 @@ Screen structure:
 1. Start game: show the setup screen and gameplay screen.
 2. Stepping on elements: use `Move` to move a player from the pump to a neighboring pipe, then later back to a pump.
 3. Puncturing a pipe: move a saboteur to a pipe and click `Puncture Pipe`.
-4. Leakage of water: click `Recalculate Water` and show the saboteur score increasing.
+4. Leakage of water: click `Water Flow` and show the saboteur score increasing.
 5. Fixing a pipe: move a plumber to the punctured pipe and click `Repair Pipe`.
-6. Setting a pump direction: stand on the pump and use `Set Pump Direction`.
-7. Pump is broken: click `Break Pump Event`.
+6. Setting a pump direction: stand on the pump and use `Change Pump Direction`.
+7. Pump is broken: click `Break Pump`.
 8. Fixing a pump: on a plumber turn at the pump, click `Repair Pump`.
 9. Disconnecting a pipe: on a plumber turn, click `Disconnect Pipe`, select a pipe and neighbor, and show the `FREE_END` state.
-10. Connecting a pipe: click `Connect Free Pipe` and reconnect the free pipe end.
+10. Connecting a pipe: click `Connect Pipe` and reconnect the free pipe end.
 11. Adding a pipe: use the right toolbar `Add Pipe` button to create a pipe at a cistern with a free end.
 12. Putting a pump into a pipe: select or choose a pipe, then use the right toolbar `Add Pump` button.
 13. End game: click `End Game` and show the winner/draw dialog.

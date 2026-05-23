@@ -1,5 +1,0 @@
-Precondition: a pump has broken during the automatic round event.
-
-Console input from that state:
-
-3

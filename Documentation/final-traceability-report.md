@@ -18,15 +18,15 @@ The professor's main traceability concern was the gap between 27 detailed-plan t
 | Pipe occupancy | Single person on pipe | Move Player FRs | Pipe occupant | Movement validation | `Pipe.setOccupant`, `Player.moveTo` | PlayerView | Canvas and move validation |
 | Puncture pipe | Saboteurs puncture pipes | Puncture Pipe | Saboteur, Pipe | Puncture tests | `Saboteur.puncturePipe` | ActionPanelView | GUI `Puncture Pipe` |
 | Repair pipe | Plumbers fix leaks | Repair Pipe/Pump | Plumber, Pipe | Repair tests | `Plumber.repairPipe` | ActionPanelView | GUI `Repair Pipe` |
-| Set pump direction | Pump input/output selectable | Change Pump Direction | Pump, Plumber, Saboteur | Direction tests | `Pump.setDirection` | ActionPanelView | GUI `Set Pump Direction` |
-| Pump breakdown | Pump may go out of order | Randomly Break Pump | Pump state | Breakdown tests | `Pump.breakDown`, `System.updateRoundEvents` | PumpView state | GUI `Break Pump Event` |
+| Set pump direction | Pump input/output selectable | Change Pump Direction | Pump, Plumber, Saboteur | Direction tests | `Pump.setDirection` | ActionPanelView | GUI `Change Pump Direction` |
+| Pump breakdown | Pump may go out of order | Randomly Break Pump | Pump state | Breakdown tests | `Pump.breakDown`, `System.updateRoundEvents` | PumpView state | GUI `Break Pump` |
 | Repair pump | Plumbers fix pumps | Repair Pipe/Pump | Plumber, Pump | Repair pump tests | `Plumber.repairPump` | ActionPanelView | GUI `Repair Pump` |
 | Disconnect pipe | Pipe end can be disconnected | Disconnect / free end rules | PipeNetwork, Pipe | Disconnect tests | `PipeNetwork.disconnectElements` | ActionPanelView | GUI `Disconnect Pipe` |
-| Connect pipe | Free end can reconnect | Connect / place pipe | PipeNetwork, Pipe | Connect tests | `Pipe.connectFreeEnd` | ActionPanelView | GUI `Connect Free Pipe` |
+| Connect pipe | Free end can reconnect | Connect / place pipe | PipeNetwork, Pipe | Connect tests | `Pipe.connectFreeEnd` | ActionPanelView | GUI `Connect Pipe` |
 | Pick up pump / add pump | Pumps made at cistern | Insert New Pump | Plumber, Cistern | Pickup and insert tests | `Plumber.collectPumpFromCistern`, `PipeNetwork.insertPump` | Right toolbar | GUI `Add Pump` |
 | Pick up pipe / add pipe | Pipes made at cistern | Place New Pipe | Plumber, Cistern | Pickup and free-end tests | `Plumber.collectPipeFromCistern`, `PipeNetwork.connectElements` | Right toolbar | GUI `Add Pipe` |
 | Insert pump into pipe | Pump inserted into pipe middle | Insert New Pump | PipeNetwork.insertPump | Insert pump tests | `PipeNetwork.insertPump` | Right toolbar | GUI `Add Pump` |
-| Leakage scoring | Leaked water scores saboteurs | Water-flow scoring | WaterFlowManager, ScoreBoard | Water-flow tests | `WaterFlowManager.registerLeakedWater` | ScoreBoardView | GUI `Recalculate Water` |
+| Leakage scoring | Leaked water scores saboteurs | Water-flow scoring | WaterFlowManager, ScoreBoard | Water-flow tests | `WaterFlowManager.registerLeakedWater` | ScoreBoardView | GUI `Water Flow` |
 | Delivered water scoring | Cistern water scores plumbers | Water-flow scoring | WaterFlowManager, ScoreBoard | Water-flow tests | `WaterFlowManager.registerDeliveredWater` | ScoreBoardView | Score label and flow recalculation |
 
 ## Bidirectional Traceability Notes

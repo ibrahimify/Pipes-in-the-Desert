@@ -65,7 +65,13 @@ cd code
 .\scripts\run-tests.ps1
 ```
 
-(3) VS Code:
+(3) Run GUI:
+```powershell
+cd code
+.\scripts\run-gui.ps1
+```
+
+(4) VS Code:
 ```
 Open code/src/main/java/app/Main.java and press F5
 ```

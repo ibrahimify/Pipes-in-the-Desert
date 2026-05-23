@@ -130,14 +130,55 @@ public class Pipe extends NetworkElement {
             return false;
         }
 
-        addNeighbor(target);
-        target.addNeighbor(this);
+        if (isAdjacentTo(target) || createsParallelConnection(target)) {
+            java.lang.System.out.println("[Pipe:" + id + "] Connection would duplicate an existing route.");
+            return false;
+        }
+
+        boolean connected;
+        if (target instanceof Pump) {
+            connected = ((Pump) target).addConnectedPipe(this);
+        } else if (target instanceof Spring) {
+            connected = ((Spring) target).setOutputPipe(this);
+        } else {
+            connected = addNeighbor(target);
+            connected = target.addNeighbor(this) || connected;
+        }
+
+        if (!connected) {
+            java.lang.System.out.println("[Pipe:" + id + "] Free end could not be connected.");
+            return false;
+        }
+
         freeEnd = false;
 
         java.lang.System.out.println("[Pipe:" + id + "] Free end connected to "
                 + target.getClass().getSimpleName() + "#" + target.getId() + ".");
 
         return true;
+    }
+
+    /**
+     * Checks whether connecting this free end would create another pipe with the
+     * same two endpoints.
+     *
+     * @param target proposed target element
+     * @return true if another pipe already connects the same route
+     */
+    private boolean createsParallelConnection(NetworkElement target) {
+        for (NetworkElement currentNeighbor : getNeighbors()) {
+            if (currentNeighbor == target) {
+                return true;
+            }
+            for (NetworkElement targetNeighbor : target.getNeighbors()) {
+                if (targetNeighbor instanceof Pipe
+                        && targetNeighbor != this
+                        && targetNeighbor.isAdjacentTo(currentNeighbor)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

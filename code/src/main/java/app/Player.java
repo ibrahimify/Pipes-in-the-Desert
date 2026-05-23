@@ -107,11 +107,13 @@ public class Player {
             }
         }
 
-        clearCurrentPipeOccupation();
+        clearCurrentOccupation();
         position = target;
 
         if (position instanceof Pipe) {
             ((Pipe) position).setOccupant(this);
+        } else if (position instanceof Pump) {
+            ((Pump) position).addOccupant(this);
         }
     }
 
@@ -178,12 +180,14 @@ public class Player {
     /**
      * Removes this player from the current pipe occupancy field.
      */
-    private void clearCurrentPipeOccupation() {
+    private void clearCurrentOccupation() {
         if (position instanceof Pipe) {
             Pipe currentPipe = (Pipe) position;
             if (currentPipe.getOccupant() == this) {
                 currentPipe.clearOccupant();
             }
+        } else if (position instanceof Pump) {
+            ((Pump) position).removeOccupant(this);
         }
     }
 }

@@ -59,8 +59,8 @@ public class WaterFlowManager {
             return;
         }
 
-        int waterAmount = spring.produceWater();
-        if (waterAmount <= 0) {
+        int producedWater = spring.produceWater();
+        if (producedWater <= 0) {
             return;
         }
 
@@ -69,44 +69,58 @@ public class WaterFlowManager {
         Set<NetworkElement> visited = new HashSet<>();
 
         if (currentPipe == null) {
-            registerLeakedWater(waterAmount);
+            registerLeakedWater(producedWater);
             return;
+        }
+
+        int acceptedByStartPipe = currentPipe.addWater(producedWater);
+        if (acceptedByStartPipe < producedWater) {
+            registerLeakedWater(producedWater - acceptedByStartPipe);
         }
 
         while (currentPipe != null) {
             if (!visited.add(currentPipe)) {
-                registerLeakedWater(waterAmount);
+                registerLeakedWater(currentPipe.drainWater());
                 return;
             }
 
             if (currentPipe.isPunctured() || currentPipe.hasFreeEnd()) {
-                registerLeakedWater(waterAmount);
+                registerLeakedWater(currentPipe.drainWater());
                 return;
             }
 
             Cistern targetCistern = findConnectedCistern(currentPipe, previousElement);
             if (targetCistern != null) {
-                targetCistern.receiveWater(waterAmount);
-                registerDeliveredWater(waterAmount);
+                int delivered = currentPipe.drainWater();
+                targetCistern.receiveWater(delivered);
+                registerDeliveredWater(delivered);
                 return;
             }
 
             Pump nextPump = findConnectedPump(currentPipe, previousElement);
             if (nextPump == null || !visited.add(nextPump)) {
-                registerLeakedWater(waterAmount);
+                registerLeakedWater(currentPipe.drainWater());
+                return;
+            }
+
+            if (isBlockedByFullOutput(nextPump, currentPipe)) {
                 return;
             }
 
             if (!canFlowThroughPump(nextPump, currentPipe)) {
-                registerLeakedWater(waterAmount);
+                registerLeakedWater(currentPipe.drainWater());
                 return;
             }
 
             previousElement = nextPump;
+            int transferred = nextPump.transferWater();
             currentPipe = nextPump.getActiveOutput();
+            if (transferred <= 0) {
+                return;
+            }
         }
 
-        registerLeakedWater(waterAmount);
+        registerLeakedWater(producedWater);
     }
 
     /**
@@ -159,7 +173,27 @@ public class WaterFlowManager {
                 && pump.canTransferWater()
                 && pump.getActiveInput() == incomingPipe
                 && pump.getActiveOutput() != null
-                && pump.getActiveOutput() != incomingPipe;
+                && pump.getActiveOutput() != incomingPipe
+                && pump.getActiveOutput().getFreeCapacity() > 0;
+    }
+
+    /**
+     * Checks whether water should simply wait because the selected output pipe
+     * is full. This is different from a broken pump or wrong direction, which
+     * the prototype treats as lost water.
+     *
+     * @param pump pump to check
+     * @param incomingPipe pipe from which water reaches the pump
+     * @return true when the pump is valid but blocked by output capacity
+     */
+    private boolean isBlockedByFullOutput(Pump pump, Pipe incomingPipe) {
+        return pump != null
+                && !pump.isBroken()
+                && pump.canTransferWater()
+                && pump.getActiveInput() == incomingPipe
+                && pump.getActiveOutput() != null
+                && pump.getActiveOutput() != incomingPipe
+                && pump.getActiveOutput().getFreeCapacity() <= 0;
     }
 
     /**

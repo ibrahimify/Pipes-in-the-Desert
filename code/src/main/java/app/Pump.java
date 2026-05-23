@@ -273,12 +273,18 @@ public class Pump extends NetworkElement {
             deliveredToOutput = activeOutput.addWater(buffer);
             buffer -= deliveredToOutput;
             java.lang.System.out.println("[Pump:" + id + "] Water pushed to output: " + deliveredToOutput);
+            if (buffer > 0) {
+                return deliveredToOutput;
+            }
         }
 
-        if (buffer == 0) {
-            int pulled = activeInput.drainWater();
-            buffer += pulled;
-            java.lang.System.out.println("[Pump:" + id + "] Water pulled from input: " + pulled);
+        int pulled = activeInput.drainWater();
+        if (pulled > 0) {
+            int accepted = activeOutput.addWater(pulled);
+            deliveredToOutput += accepted;
+            buffer += pulled - accepted;
+            java.lang.System.out.println("[Pump:" + id + "] Water pulled from input: " + pulled
+                    + ", sent to output: " + accepted + ", buffered: " + buffer);
         }
 
         return deliveredToOutput;

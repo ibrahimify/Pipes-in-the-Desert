@@ -370,24 +370,51 @@ public class System {
      */
     private void buildInitialNetwork() {
         Spring spring = new Spring(network.generateId());
-        Cistern cistern = new Cistern(network.generateId());
-        Pump pump = new Pump(network.generateId());
-        Pipe inputPipe = new Pipe(network.generateId());
-        Pipe outputPipe = new Pipe(network.generateId());
+        Cistern northCistern = new Cistern(network.generateId());
+        Cistern southCistern = new Cistern(network.generateId());
+        Pump hubPump = new Pump(network.generateId());
+        Pump northPump = new Pump(network.generateId());
+        Pump southPump = new Pump(network.generateId());
+        Pipe sourcePipe = new Pipe(network.generateId());
+        Pipe northFeedPipe = new Pipe(network.generateId());
+        Pipe northDeliveryPipe = new Pipe(network.generateId());
+        Pipe southFeedPipe = new Pipe(network.generateId());
+        Pipe southDeliveryPipe = new Pipe(network.generateId());
+        Pipe crossPipe = new Pipe(network.generateId());
 
         network.addElement(spring);
-        network.addElement(cistern);
-        network.addElement(pump);
-        network.addElement(inputPipe);
-        network.addElement(outputPipe);
+        network.addElement(northCistern);
+        network.addElement(southCistern);
+        network.addElement(hubPump);
+        network.addElement(northPump);
+        network.addElement(southPump);
+        network.addElement(sourcePipe);
+        network.addElement(northFeedPipe);
+        network.addElement(northDeliveryPipe);
+        network.addElement(southFeedPipe);
+        network.addElement(southDeliveryPipe);
+        network.addElement(crossPipe);
 
-        network.connectElements(spring, inputPipe);
-        network.connectElements(inputPipe, pump);
-        network.connectElements(pump, outputPipe);
-        network.connectElements(outputPipe, cistern);
+        network.connectElements(spring, sourcePipe);
+        network.connectElements(sourcePipe, hubPump);
 
-        spring.setOutputPipe(inputPipe);
-        pump.setDirection(inputPipe, outputPipe);
+        network.connectElements(hubPump, northFeedPipe);
+        network.connectElements(northFeedPipe, northPump);
+        network.connectElements(northPump, northDeliveryPipe);
+        network.connectElements(northDeliveryPipe, northCistern);
+
+        network.connectElements(hubPump, southFeedPipe);
+        network.connectElements(southFeedPipe, southPump);
+        network.connectElements(southPump, southDeliveryPipe);
+        network.connectElements(southDeliveryPipe, southCistern);
+
+        network.connectElements(northPump, crossPipe);
+        network.connectElements(crossPipe, southPump);
+
+        spring.setOutputPipe(sourcePipe);
+        hubPump.setDirection(sourcePipe, northFeedPipe);
+        northPump.setDirection(northFeedPipe, northDeliveryPipe);
+        southPump.setDirection(southFeedPipe, southDeliveryPipe);
     }
 
     /**

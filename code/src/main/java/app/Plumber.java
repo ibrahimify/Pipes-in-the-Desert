@@ -106,7 +106,8 @@ public class Plumber extends Player {
                 || target == null
                 || target == pipe
                 || !pipe.hasFreeEnd()
-                || !isAtOrAdjacentTo(pipe)) {
+                || !isAtOrAdjacentTo(pipe)
+                || !isAtOrAdjacentTo(target)) {
             return;
         }
 
@@ -159,29 +160,15 @@ public class Plumber extends Player {
      * Checks whether the plumber can reach a cistern.
      *
      * <p>
-     * The cistern is reachable if the plumber is standing on it, next to it,
-     * or next to one of the cistern's neighboring elements.
+     * The cistern is reachable only when the plumber is standing on a directly
+     * connected pipe next to it.
      * </p>
      *
      * @param cistern cistern to check
      * @return true if the cistern can be reached
      */
     private boolean canReachCistern(Cistern cistern) {
-        if (isAtOrAdjacentTo(cistern)) {
-            return true;
-        }
-
-        if (position == null || cistern == null) {
-            return false;
-        }
-
-        for (NetworkElement neighbor : cistern.getNeighbors()) {
-            if (position == neighbor || position.isAdjacentTo(neighbor)) {
-                return true;
-            }
-        }
-
-        return false;
+        return isAtOrAdjacentTo(cistern);
     }
 
     /**
@@ -193,7 +180,7 @@ public class Plumber extends Player {
         if (!canAct()
                 || cistern == null
                 || carriedPipe
-                || !isAtOrAdjacentTo(cistern)
+                || !canReachCistern(cistern)
                 || !cistern.hasAvailablePipe()) {
             return;
         }
@@ -202,6 +189,30 @@ public class Plumber extends Player {
             carriedPipe = true;
             endTurn();
         }
+    }
+
+    /**
+     * Places the carried pipe into the network with one connected end.
+     *
+     * @param pipe    new pipe to place
+     * @param a       connected endpoint
+     * @param network active pipe network
+     */
+    public void placeNewPipe(Pipe pipe, NetworkElement a, PipeNetwork network) {
+        if (!canAct()
+                || pipe == null
+                || a == null
+                || network == null
+                || !carriedPipe
+                || !isAtOrAdjacentTo(a)) {
+            return;
+        }
+
+        network.addElement(pipe);
+        network.connectElements(pipe, a);
+        pipe.disconnectEnd();
+        carriedPipe = false;
+        endTurn();
     }
 
     /**
@@ -221,7 +232,9 @@ public class Plumber extends Player {
                 || a == b
                 || network == null
                 || !carriedPipe
-                || !isAtOrAdjacentTo(a)) {
+                || !isAtOrAdjacentTo(a)
+                || !isAtOrAdjacentTo(b)
+                || network.areAdjacent(a, b)) {
             return;
         }
 

@@ -12,10 +12,10 @@ package app;
 public class Plumber extends Player {
 
     /** True if this plumber currently carries a pump. */
-    private boolean carriedPump;
+    boolean carriedPump;
 
     /** True if this plumber currently carries a pipe. */
-    private boolean carriedPipe;
+    boolean carriedPipe;
 
     /**
      * Creates a plumber with a starting position.
@@ -83,8 +83,6 @@ public class Plumber extends Player {
                 || input == output
                 || position != pump
                 || pump.isBroken()
-                // --- NEW FIX:
-                // BUG 2 FIX
                 || !pump.getConnectedPipes().contains(input)
                 || !pump.getConnectedPipes().contains(output)) {
             return;
@@ -218,7 +216,6 @@ public class Plumber extends Player {
         if (!canAct()
                 || pipe == null
                 || a == null
-                || b == null
                 || a == b
                 || network == null
                 || !carriedPipe
@@ -228,7 +225,11 @@ public class Plumber extends Player {
 
         network.addElement(pipe);
         network.connectElements(pipe, a);
-        network.connectElements(pipe, b);
+        if (b != null) {
+            network.connectElements(pipe, b);
+        } else {
+            pipe.disconnectEnd();
+        }
         carriedPipe = false;
         endTurn();
     }

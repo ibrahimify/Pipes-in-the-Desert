@@ -4,6 +4,8 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.FontMetrics;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontFormatException;
@@ -154,6 +156,15 @@ public class FinalGuiMain extends JFrame {
     /** Timer that refreshes the HUD. */
     private Timer refreshTimer;
 
+    /** Dash phase shift for flowing water animation. */
+    private float dashPhase;
+
+    /** Timer that runs the high FPS animation loop. */
+    private Timer animTimer;
+
+    /** Map of toolbar buttons for dynamic role-based disabling. */
+    private final Map<Tool, JButton> toolButtons;
+
     /**
      * Starts the final graphical program.
      *
@@ -190,6 +201,15 @@ public class FinalGuiMain extends JFrame {
         this.elementTiles = new LinkedHashMap<>();
         this.pipeRotations = new HashMap<>();
         this.pumpRotations = new HashMap<>();
+        this.toolButtons = new HashMap<>();
+        this.dashPhase = 0.0f;
+        this.animTimer = new Timer(50, e -> {
+            dashPhase -= 1.5f;
+            if (mapPanel != null) {
+                mapPanel.repaint();
+            }
+        });
+        this.animTimer.start();
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1280, 720));
@@ -203,6 +223,7 @@ public class FinalGuiMain extends JFrame {
         cards.show(root, MENU_CARD);
         pack();
         setSize(new Dimension(1920, 1080));
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
     }
 
@@ -313,8 +334,8 @@ public class FinalGuiMain extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(24, 36, 24, 36));
 
         JPanel form = new JPanel(new GridBagLayout());
-        form.setBackground(new Color(195, 139, 55, 232));
-        form.setBorder(retroPanelBorder(4, 24));
+        form.setBackground(new Color(211, 159, 90, 235));
+        form.setBorder(BorderFactory.createLineBorder(new Color(32, 26, 21), 4, true));
 
         GridBagConstraints formGbc = new GridBagConstraints();
         formGbc.insets = new Insets(7, 10, 7, 10);
@@ -376,8 +397,9 @@ public class FinalGuiMain extends JFrame {
             JLabel playerIcon = new JLabel(scaledIcon(
                     "Saboteur".equals(roles[i]) ? image("saboteur") : image("plumber"), 28, 28));
             form.add(playerIcon, gbc);
-            gbc.gridx = 1;
-            form.add(retroLabel("PLAYER " + (i + 1)), gbc);
+            JLabel pLabel = retroLabel("PLAYER " + (i + 1));
+            pLabel.setForeground("Plumber".equals(roles[i]) ? new Color(66, 176, 255) : new Color(239, 62, 47));
+            form.add(pLabel, gbc);
             gbc.gridx = 2;
             form.add(name, gbc);
             gbc.gridx = 3;
@@ -404,7 +426,7 @@ public class FinalGuiMain extends JFrame {
      */
     private JPanel createGamePanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(new Color(95, 56, 20));
+        panel.setBackground(new Color(211, 159, 90));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         panel.add(createTopBar(), BorderLayout.NORTH);
@@ -444,8 +466,8 @@ public class FinalGuiMain extends JFrame {
      */
     private JPanel wrapHud(JLabel... labels) {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(24, 19, 14));
-        panel.setBorder(retroHudBorder());
+        panel.setBackground(new Color(34, 34, 34));
+        panel.setBorder(BorderFactory.createLineBorder(new Color(250, 208, 44), 3, true));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(0, 5, 0, 5);
         for (int i = 0; i < labels.length; i++) {
@@ -464,8 +486,8 @@ public class FinalGuiMain extends JFrame {
      */
     private JPanel scoreHud() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(24, 19, 14));
-        panel.setBorder(retroHudBorder());
+        panel.setBackground(new Color(34, 34, 34));
+        panel.setBorder(BorderFactory.createLineBorder(new Color(250, 208, 44), 3, true));
 
         JLabel plumberIcon = new JLabel(scaledIcon(image("plumber"), 26, 26));
         JLabel plumberText = new JLabel("PLUMBERS:");
@@ -476,8 +498,8 @@ public class FinalGuiMain extends JFrame {
         for (JLabel label : labels) {
             styleHudText(label);
         }
-        plumberText.setForeground(new Color(72, 177, 255));
-        saboteurText.setForeground(new Color(244, 72, 57));
+        plumberText.setForeground(new Color(66, 176, 255));
+        saboteurText.setForeground(new Color(239, 62, 47));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(0, 4, 0, 4);
@@ -506,13 +528,13 @@ public class FinalGuiMain extends JFrame {
     private JPanel createLeftStatusPanel() {
         JPanel left = new JPanel(new BorderLayout(6, 6));
         left.setPreferredSize(new Dimension(230, GRID_ROWS * TILE_SIZE));
-        left.setBackground(new Color(21, 18, 14));
-        left.setBorder(retroPanelBorder(3, 10));
+        left.setBackground(new Color(34, 34, 34));
+        left.setBorder(BorderFactory.createLineBorder(new Color(250, 208, 44), 4, true));
         JLabel title = retroLabel("STATUS / INFO");
-        title.setForeground(new Color(255, 226, 77));
+        title.setForeground(new Color(250, 208, 44));
         statusArea.setEditable(false);
-        statusArea.setBackground(new Color(14, 14, 13));
-        statusArea.setForeground(new Color(239, 220, 164));
+        statusArea.setBackground(new Color(20, 20, 20));
+        statusArea.setForeground(new Color(244, 238, 211));
         statusArea.setFont(readableFont(13f, Font.PLAIN));
         left.add(title, BorderLayout.NORTH);
         JScrollPane statusScroll = new JScrollPane(statusArea);
@@ -523,18 +545,20 @@ public class FinalGuiMain extends JFrame {
         return left;
     }
 
-    /**
+     /**
      * Creates the right action toolbar.
      *
      * @return toolbar panel
      */
     private JPanel createRightToolbar() {
-        JPanel toolbar = new JPanel(new GridLayout(0, 1, 5, 5));
+        JPanel toolbar = new JPanel(new GridLayout(0, 1, 4, 4));
         toolbar.setPreferredSize(new Dimension(230, GRID_ROWS * TILE_SIZE));
-        toolbar.setBackground(new Color(21, 18, 14));
-        toolbar.setBorder(retroPanelBorder(3, 10));
+        toolbar.setBackground(new Color(34, 34, 34));
+        toolbar.setBorder(BorderFactory.createLineBorder(new Color(250, 208, 44), 4, true));
 
         addToolbarLabel(toolbar, "OBJECTS");
+        addTool(toolbar, "Pick Up Pipe", Tool.PICKUP_PIPE);
+        addTool(toolbar, "Pick Up Pump", Tool.PICKUP_PUMP);
         addTool(toolbar, "Add Pipe", Tool.ADD_PIPE);
         addTool(toolbar, "Add Pump", Tool.ADD_PUMP);
         addToolbarLabel(toolbar, "PIPE TOOLS");
@@ -577,7 +601,8 @@ public class FinalGuiMain extends JFrame {
      */
     private void addToolbarLabel(JPanel toolbar, String title) {
         JLabel label = retroLabel(title);
-        label.setForeground(new Color(255, 226, 77));
+        label.setForeground(new Color(250, 208, 44));
+        label.setHorizontalAlignment(JLabel.CENTER);
         toolbar.add(label);
     }
 
@@ -593,6 +618,7 @@ public class FinalGuiMain extends JFrame {
         button.setToolTipText(text);
         button.addActionListener(e -> activateTool(tool));
         toolbar.add(button);
+        toolButtons.put(tool, button);
     }
 
     /**
@@ -653,6 +679,8 @@ public class FinalGuiMain extends JFrame {
         startRefreshTimer();
         setMessage("Select an object, then click a valid place on the map.");
         cards.show(root, GAME_CARD);
+        root.revalidate();
+        root.repaint();
         refreshView();
     }
 
@@ -721,10 +749,14 @@ public class FinalGuiMain extends JFrame {
      */
     private String instructionFor(Tool tool) {
         switch (tool) {
+            case PICKUP_PIPE:
+                return "Select a Cistern connected to your position to pick up a pipe.";
+            case PICKUP_PUMP:
+                return "Select a Cistern connected to your position to pick up a pump.";
             case ADD_PIPE:
-                return "Select an object, then click an adjacent empty grid tile to add a pipe.";
+                return "Select a cistern, then click an adjacent empty grid tile to place the carried pipe.";
             case ADD_PUMP:
-                return "Click a pipe to insert a pump into it.";
+                return "Click a pipe you stand on to insert the carried pump.";
             case REMOVE_PIPE:
                 return "Click a pipe to remove it.";
             case CONNECT_PIPE:
@@ -778,6 +810,12 @@ public class FinalGuiMain extends JFrame {
      */
     private void executeTool(Tile tile, NetworkElement element) {
         switch (activeTool) {
+            case PICKUP_PIPE:
+                pickUpPipe(element);
+                break;
+            case PICKUP_PUMP:
+                pickUpPump(element);
+                break;
             case ADD_PIPE:
                 addPipeAt(tile, element);
                 break;
@@ -823,6 +861,68 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
+     * Picks up a pipe from a cistern.
+     *
+     * @param element clicked element
+     */
+    private void pickUpPipe(NetworkElement element) {
+        if (!requireCurrentPlayer("Pick Up Pipe", Plumber.class)) {
+            return;
+        }
+        if (!(element instanceof Cistern)) {
+            setMessage("Select a cistern to pick up a pipe from.");
+            return;
+        }
+        Cistern cistern = (Cistern) element;
+        if (!currentPlayerCanReach(cistern)) {
+            setMessage("You must stand adjacent to the cistern to pick up a pipe.");
+            return;
+        }
+        Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+        if (plumber.isCarryingPipe()) {
+            setMessage("You are already carrying a pipe.");
+            return;
+        }
+        if (!cistern.hasAvailablePipe()) {
+            setMessage("No pipes available at this cistern.");
+            return;
+        }
+        plumber.collectPipeFromCistern(cistern);
+        consumeCurrentTurn("Picked up a pipe from the cistern.");
+    }
+
+    /**
+     * Picks up a pump from a cistern.
+     *
+     * @param element clicked element
+     */
+    private void pickUpPump(NetworkElement element) {
+        if (!requireCurrentPlayer("Pick Up Pump", Plumber.class)) {
+            return;
+        }
+        if (!(element instanceof Cistern)) {
+            setMessage("Select a cistern to pick up a pump from.");
+            return;
+        }
+        Cistern cistern = (Cistern) element;
+        if (!currentPlayerCanReach(cistern)) {
+            setMessage("You must stand adjacent to the cistern to pick up a pump.");
+            return;
+        }
+        Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+        if (plumber.isCarryingPump()) {
+            setMessage("You are already carrying a pump.");
+            return;
+        }
+        if (!cistern.hasAvailablePump()) {
+            setMessage("No pumps available at this cistern.");
+            return;
+        }
+        plumber.collectPumpFromCistern(cistern);
+        consumeCurrentTurn("Picked up a pump from the cistern.");
+    }
+
+    /**
      * Adds a pipe to an adjacent empty tile.
      *
      * @param tile target tile
@@ -832,9 +932,14 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPlayer("Add Pipe", Plumber.class)) {
             return;
         }
+        Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+        if (!plumber.isCarryingPipe()) {
+            setMessage("You must pick up a pipe from a cistern first.");
+            return;
+        }
         if (element != null) {
             if (!(element instanceof Cistern)) {
-                setMessage("New pipes are manufactured at cisterns. Select the cistern first.");
+                setMessage("New pipes are placed adjacent to cisterns. Select the cistern first.");
                 return;
             }
             if (!currentPlayerCanReach(element)) {
@@ -852,9 +957,8 @@ public class FinalGuiMain extends JFrame {
         }
 
         Pipe pipe = new Pipe(network.generateId());
-        network.addElement(pipe);
-        network.connectElements(selectedElement, pipe);
-        pipe.disconnectEnd();
+        plumber.placeNewPipe(pipe, selectedElement, null, network);
+        
         elementTiles.put(pipe, tile);
         pipeRotations.put(pipe, 0);
         selectedElement = pipe;
@@ -870,6 +974,11 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPlayer("Add Pump", Plumber.class)) {
             return;
         }
+        Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+        if (!plumber.isCarryingPump()) {
+            setMessage("You must pick up a pump from a cistern first.");
+            return;
+        }
         if (!(element instanceof Pipe)) {
             setMessage("Invalid placement. Click a pipe to insert a pump.");
             return;
@@ -880,7 +989,9 @@ public class FinalGuiMain extends JFrame {
         Pipe oldPipe = (Pipe) element;
         Tile baseTile = elementTiles.get(oldPipe);
         Pump pump = new Pump(network.generateId());
-        network.insertPump(oldPipe, pump);
+        
+        plumber.insertPump(oldPipe, pump, network);
+        
         elementTiles.remove(oldPipe);
         pipeRotations.remove(oldPipe);
 
@@ -975,8 +1086,10 @@ public class FinalGuiMain extends JFrame {
             return;
         }
 
-        network.connectElements(pipe, element);
-        if (network.areAdjacent(pipe, element) && pipe.connectFreeEnd(element)) {
+        Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+        plumber.connectPipeEnd(pipe, element);
+        
+        if (network.areAdjacent(pipe, element)) {
             consumeCurrentTurn("Free pipe end connected.");
         } else {
             setMessage("Connection failed.");
@@ -1051,7 +1164,8 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPosition(element, "Repair Pipe")) {
             return;
         }
-        ((Pipe) element).repair();
+        Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+        plumber.repairPipe((Pipe) element);
         consumeCurrentTurn("Pipe repaired.");
     }
 
@@ -1071,7 +1185,8 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPosition(element, "Puncture Pipe")) {
             return;
         }
-        ((Pipe) element).puncture();
+        Saboteur saboteur = (Saboteur) gameSystem.getCurrentPlayer();
+        saboteur.puncturePipe((Pipe) element);
         consumeCurrentTurn("Pipe punctured. Leakage is visible and counted.");
     }
 
@@ -1115,7 +1230,8 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPosition(element, "Repair Pump")) {
             return;
         }
-        ((Pump) element).repair();
+        Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+        plumber.repairPump((Pump) element);
         consumeCurrentTurn("Pump repaired.");
     }
 
@@ -1152,13 +1268,37 @@ public class FinalGuiMain extends JFrame {
         }
         Pump pump = (Pump) element;
         List<Pipe> connected = pump.getConnectedPipes();
-        if (connected.size() < 2) {
+        int numPipes = connected.size();
+        if (numPipes < 2) {
             setMessage("Pump needs two connected pipes.");
             return;
         }
-        Pipe input = pump.getActiveInput() == connected.get(0) ? connected.get(1) : connected.get(0);
-        Pipe output = input == connected.get(0) ? connected.get(1) : connected.get(0);
-        pump.setDirection(input, output);
+        
+        int currentInputIdx = connected.indexOf(pump.getActiveInput());
+        int currentOutputIdx = connected.indexOf(pump.getActiveOutput());
+        
+        int nextInputIdx = 0;
+        int nextOutputIdx = 1;
+        if (currentInputIdx != -1 && currentOutputIdx != -1) {
+            int currentPairIndex = currentInputIdx * numPipes + currentOutputIdx;
+            int nextPairIndex = currentPairIndex;
+            do {
+                nextPairIndex = (nextPairIndex + 1) % (numPipes * numPipes);
+                nextInputIdx = nextPairIndex / numPipes;
+                nextOutputIdx = nextPairIndex % numPipes;
+            } while (nextInputIdx == nextOutputIdx);
+        }
+        
+        Pipe input = connected.get(nextInputIdx);
+        Pipe output = connected.get(nextOutputIdx);
+        
+        Player player = gameSystem.getCurrentPlayer();
+        if (player instanceof Plumber) {
+            ((Plumber) player).changePumpDirection(pump, input, output);
+        } else if (player instanceof Saboteur) {
+            ((Saboteur) player).changePumpDirection(pump, input, output);
+        }
+        
         pumpRotations.put(pump, (pumpRotations.getOrDefault(pump, 0) + 1) % 4);
         consumeCurrentTurn("Pump direction changed.");
     }
@@ -1420,8 +1560,28 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Player current = gameSystem.getCurrentPlayer();
+        boolean isPlumber = current instanceof Plumber;
+        boolean isSaboteur = current instanceof Saboteur;
+        for (Map.Entry<Tool, JButton> entry : toolButtons.entrySet()) {
+            Tool tool = entry.getKey();
+            JButton button = entry.getValue();
+            boolean enabled = true;
+            if (tool == Tool.PICKUP_PIPE || tool == Tool.PICKUP_PUMP || tool == Tool.ADD_PIPE 
+                    || tool == Tool.ADD_PUMP || tool == Tool.REMOVE_PIPE || tool == Tool.CONNECT_PIPE 
+                    || tool == Tool.DISCONNECT_PIPE || tool == Tool.REPAIR_PIPE || tool == Tool.REMOVE_PUMP 
+                    || tool == Tool.REPAIR_PUMP) {
+                enabled = isPlumber;
+            } else if (tool == Tool.PUNCTURE_PIPE) {
+                enabled = isSaboteur;
+            } else if (tool == Tool.CHANGE_DIRECTION) {
+                enabled = isPlumber || isSaboteur;
+            }
+            button.setEnabled(enabled);
+        }
+
         turnLabel.setText(current == null ? "TURN: -" : "TURN: " + current.getName()
                 + " (" + current.getClass().getSimpleName() + ")");
+        turnLabel.setForeground(isPlumber ? new Color(66, 176, 255) : isSaboteur ? new Color(239, 62, 47) : Color.WHITE);
         turnLabel.setIcon(current == null ? null : scaledIcon(playerSprite(current), 28, 28));
         timerLabel.setText("TIMER: " + gameSystem.getTimer().getRemainingTime() + "s");
         ScoreBoard scoreBoard = gameSystem.getScoreBoard();
@@ -1447,7 +1607,13 @@ public class FinalGuiMain extends JFrame {
         if (current != null) {
             builder.append("Current player:\n");
             builder.append(current.getName()).append('\n');
-            builder.append(describe(current.getPosition())).append("\n\n");
+            builder.append("Pos: ").append(describe(current.getPosition())).append('\n');
+            if (current instanceof Plumber) {
+                Plumber plumber = (Plumber) current;
+                builder.append("Carrying Pipe: ").append(plumber.isCarryingPipe() ? "Yes" : "No").append('\n');
+                builder.append("Carrying Pump: ").append(plumber.isCarryingPump() ? "Yes" : "No").append('\n');
+            }
+            builder.append("\n");
         }
         builder.append("Pipes:\n");
         for (Pipe pipe : network.getPipes()) {
@@ -1611,10 +1777,10 @@ public class FinalGuiMain extends JFrame {
     private JButton pixelButton(String text) {
         JButton button = new GameButton(text);
         button.setFocusPainted(false);
-        button.setForeground(Color.WHITE);
-        button.setBackground(new Color(96, 58, 28));
+        button.setForeground(new Color(244, 238, 211));
+        button.setBackground(new Color(107, 66, 38));
         button.setBorder(BorderFactory.createEmptyBorder(7, 12, 9, 12));
-        button.setFont(uiFont(10f, Font.BOLD));
+        button.setFont(uiFont(11f, Font.BOLD));
         return button;
     }
 
@@ -1627,8 +1793,9 @@ public class FinalGuiMain extends JFrame {
     private JButton menuButton(String text) {
         JButton button = pixelButton(text);
         button.setPreferredSize(new Dimension(320, 54));
-        button.setFont(uiFont(14f, Font.BOLD));
-        button.setBackground(new Color(112, 74, 36));
+        button.setFont(uiFont(16f, Font.BOLD));
+        button.setForeground(Color.WHITE);
+        button.setBackground(new Color(43, 90, 140));
         return button;
     }
 
@@ -1653,7 +1820,28 @@ public class FinalGuiMain extends JFrame {
      * @return title label
      */
     private JLabel titleLabel(String text, int size) {
-        JLabel label = new JLabel(text);
+        JLabel label = new JLabel(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                if (pixelFont != null) {
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+                } else {
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                }
+                FontMetrics fm = g2.getFontMetrics(getFont());
+                int textX = (getWidth() - fm.stringWidth(getText())) / 2;
+                int textY = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                g2.setColor(new Color(25, 14, 5, 200));
+                g2.drawString(getText(), textX + 6, textY + 6);
+                g2.drawString(getText(), textX + 7, textY + 7);
+
+                g2.setColor(getForeground());
+                g2.drawString(getText(), textX, textY);
+                g2.dispose();
+            }
+        };
         label.setForeground(new Color(255, 207, 65));
         label.setFont(uiFont(size, Font.BOLD));
         label.setHorizontalAlignment(JLabel.CENTER);
@@ -2045,11 +2233,11 @@ public class FinalGuiMain extends JFrame {
                 drawPixelImage(g, background, 0, 0, getWidth(), getHeight());
                 return;
             }
-            g.setColor(new Color(211, 132, 31));
+            g.setColor(new Color(211, 159, 90));
             g.fillRect(0, 0, getWidth(), getHeight());
-            g.setColor(new Color(180, 104, 22));
+            g.setColor(new Color(195, 139, 55, 100));
             for (int y = 0; y < getHeight(); y += 26) {
-                g.drawLine(0, y, getWidth(), y + 40);
+                g.drawLine(0, y, getWidth(), y);
             }
         }
 
@@ -2059,19 +2247,12 @@ public class FinalGuiMain extends JFrame {
          * @param g graphics context
          */
         private void drawGrid(Graphics2D g) {
-            g.setColor(new Color(255, 238, 173, 35));
+            g.setColor(new Color(195, 139, 55, 60));
             for (int x = 0; x <= getWidth(); x += TILE_SIZE) {
                 g.drawLine(x, 0, x, getHeight());
             }
             for (int y = 0; y <= getHeight(); y += TILE_SIZE) {
                 g.drawLine(0, y, getWidth(), y);
-            }
-            g.setColor(new Color(95, 60, 25, 75));
-            for (int x = TILE_SIZE; x < getWidth(); x += TILE_SIZE) {
-                g.drawLine(x + 1, 0, x + 1, getHeight());
-            }
-            for (int y = TILE_SIZE; y < getHeight(); y += TILE_SIZE) {
-                g.drawLine(0, y + 1, getWidth(), y + 1);
             }
         }
 
@@ -2103,17 +2284,18 @@ public class FinalGuiMain extends JFrame {
             g.setStroke(new BasicStroke(1f));
         }
 
-        /**
-         * Draws blue route hints for the active water-flow path.
-         *
-         * @param g graphics context
-         */
         private void drawWaterFlow(Graphics2D g) {
             if (network == null) {
                 return;
             }
-            g.setStroke(new BasicStroke(4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            g.setColor(new Color(72, 185, 255, 210));
+            float[] dashPattern = { 10f, 8f };
+            float patternSum = 18f;
+            float phase = dashPhase % patternSum;
+            if (phase < 0) {
+                phase += patternSum;
+            }
+            g.setStroke(new BasicStroke(4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1.0f, dashPattern, phase));
+            g.setColor(new Color(64, 180, 255, 220));
             for (Spring spring : network.getSprings()) {
                 Pipe output = spring.getOutputPipe();
                 if (output != null && isFlowingPipe(output)) {
@@ -2139,6 +2321,25 @@ public class FinalGuiMain extends JFrame {
                 }
             }
             g.setStroke(new BasicStroke(1f));
+
+            // Spray animation for punctured and free-end pipes
+            double time = java.lang.System.currentTimeMillis() / 150.0;
+            g.setColor(new Color(64, 180, 255, 230));
+            for (Pipe pipe : network.getPipes()) {
+                if (pipe.isPunctured() || pipe.hasFreeEnd()) {
+                    Tile tile = elementTiles.get(pipe);
+                    if (tile != null) {
+                        Point center = tile.center();
+                        for (int i = 0; i < 4; i++) {
+                            double angle = (time + i * (Math.PI / 2.0)) % (2.0 * Math.PI);
+                            double r = 8 + 6 * Math.sin(time + i);
+                            int px = center.x + (int)(r * Math.cos(angle));
+                            int py = center.y - 10 - (int)(r * Math.sin(angle)); // spray upwards
+                            g.fillOval(px - 3, py - 3, 6, 6);
+                        }
+                    }
+                }
+            }
         }
 
         /**
@@ -2225,7 +2426,7 @@ public class FinalGuiMain extends JFrame {
                 if (sprite != null) {
                     drawPixelImage(g, sprite, x, y, 42, 46);
                 } else {
-                    g.setColor(player instanceof Plumber ? Color.BLUE : Color.DARK_GRAY);
+                    g.setColor(player instanceof Plumber ? new Color(66, 176, 255) : new Color(239, 62, 47));
                     g.fillOval(x, y, 24, 24);
                 }
                 drawPlayerName(g, player, x + 21, y - 4);
@@ -2248,7 +2449,7 @@ public class FinalGuiMain extends JFrame {
             int height = 12;
             g.setColor(new Color(0, 0, 0, 170));
             g.fillRoundRect(centerX - width / 2, y - height, width, height, 5, 5);
-            g.setColor(player instanceof Plumber ? new Color(72, 177, 255) : new Color(244, 72, 57));
+            g.setColor(player instanceof Plumber ? new Color(66, 176, 255) : new Color(239, 62, 47));
             g.drawString(text, centerX - width / 2 + 3, y - 3);
         }
 
@@ -2335,7 +2536,7 @@ public class FinalGuiMain extends JFrame {
             if (background != null) {
                 drawPixelImage(g, background, 0, 0, getWidth(), getHeight());
             } else {
-                g.setColor(new Color(211, 132, 31));
+                g.setColor(new Color(211, 159, 90));
                 g.fillRect(0, 0, getWidth(), getHeight());
             }
         }
@@ -2360,27 +2561,39 @@ public class FinalGuiMain extends JFrame {
             setContentAreaFilled(false);
             setBorderPainted(false);
             setRolloverEnabled(true);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         }
 
         @Override
         protected void paintComponent(Graphics graphics) {
             Graphics2D g = (Graphics2D) graphics.create();
-            int offset = getModel().isPressed() ? 2 : 0;
-            int arc = 12;
+            int offset = getModel().isPressed() ? 3 : 0;
+            int arc = 6;
             int width = getWidth() - 4;
             int height = getHeight() - 6;
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g.setColor(new Color(0, 0, 0, 110));
-            g.fillRoundRect(4, 5, width, height, arc, arc);
+            
+            g.setColor(new Color(0, 0, 0, 100));
+            g.fillRoundRect(4, 6, width, height, arc, arc);
+            
             Color base = getBackground();
             if (getModel().isRollover()) {
                 base = base.brighter();
             }
-            g.setColor(base);
+            
+            g.setColor(base.darker().darker());
             g.fillRoundRect(1, 1 + offset, width, height, arc, arc);
-            g.setColor(new Color(26, 16, 8));
+            
+            g.setColor(base);
+            g.fillRoundRect(1, 1 + offset, width, height - 4, arc, arc);
+            
+            g.setColor(base.brighter());
+            g.fillRoundRect(1, 1 + offset, width, height / 3, arc, arc);
+            
+            g.setColor(new Color(32, 26, 21));
             g.setStroke(new BasicStroke(3f));
             g.drawRoundRect(1, 1 + offset, width, height, arc, arc);
+            
             g.dispose();
             super.paintComponent(graphics);
         }
@@ -2461,6 +2674,10 @@ public class FinalGuiMain extends JFrame {
     private enum Tool {
         /** Select-only mode. */
         SELECT("Select"),
+        /** Picks up a pipe. */
+        PICKUP_PIPE("Pick Up Pipe"),
+        /** Picks up a pump. */
+        PICKUP_PUMP("Pick Up Pump"),
         /** Adds a pipe to the grid. */
         ADD_PIPE("Add Pipe"),
         /** Inserts a pump into a pipe. */

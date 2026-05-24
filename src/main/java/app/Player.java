@@ -108,10 +108,15 @@ public class Player {
         }
 
         clearCurrentPipeOccupation();
+        if (position instanceof Pump) {
+            ((Pump) position).removeOccupant(this);
+        }
         position = target;
 
         if (position instanceof Pipe) {
             ((Pipe) position).setOccupant(this);
+        } else if (position instanceof Pump) {
+            ((Pump) position).addOccupant(this);
         }
     }
 

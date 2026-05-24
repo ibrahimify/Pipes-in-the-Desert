@@ -1039,13 +1039,21 @@ public class FinalGuiMain extends JFrame {
             setMessage("Select a pipe to remove.");
             return;
         }
+
+        Pipe pipe = (Pipe) element;
+
+        if (pipe.isOccupied()) {
+            setMessage("Cannot remove this pipe because a player is standing on it.");
+            return;
+        }
+
         if (!currentPlayerCanReach(element)) {
             setMessage("Remove Pipe requires the plumber to stand on or next to the pipe.");
             return;
         }
-        network.removeElement(element);
-        elementTiles.remove(element);
-        pipeRotations.remove(element);
+        network.removeElement(pipe);
+        elementTiles.remove(pipe);
+        pipeRotations.remove(pipe);
         selectedElement = null;
         consumeCurrentTurn("Pipe removed.");
     }
@@ -1192,8 +1200,15 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPosition(element, "Puncture Pipe")) {
             return;
         }
-        Saboteur saboteur = (Saboteur) gameSystem.getCurrentPlayer();
-        saboteur.puncturePipe((Pipe) element);
+
+        Pipe pipe = (Pipe) element;
+
+        if (pipe.isPunctured()) {
+            setMessage("This pipe is already punctured.");
+            return;
+        }
+
+        pipe.puncture();
         consumeCurrentTurn("Pipe punctured. Leakage is visible and counted.");
     }
 
@@ -1258,7 +1273,15 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPosition(element, "Break Pump")) {
             return;
         }
-        ((Pump) element).breakDown();
+
+        Pump pump = (Pump) element;
+
+        if (pump.isBroken()) {
+            setMessage("This pump is already broken.");
+            return;
+        }
+
+        pump.breakDown();
         consumeCurrentTurn("Pump broken. Water cannot pass through it.");
     }
 

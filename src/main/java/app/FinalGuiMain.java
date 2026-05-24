@@ -582,8 +582,8 @@ public class FinalGuiMain extends JFrame {
         addToolbarLabel(toolbar, "OBJECTS");
         addTool(toolbar, "Pick Up Pipe", Tool.PICKUP_PIPE);
         addTool(toolbar, "Pick Up Pump", Tool.PICKUP_PUMP);
-        addTool(toolbar, "Add Pipe", Tool.ADD_PIPE);
-        addTool(toolbar, "Add Pump", Tool.ADD_PUMP);
+        addTool(toolbar, "Place Pipe", Tool.ADD_PIPE);
+        addTool(toolbar, "Place Pump", Tool.ADD_PUMP);
         addToolbarLabel(toolbar, "PIPE TOOLS");
         addTool(toolbar, "Remove Pipe", Tool.REMOVE_PIPE);
         addTool(toolbar, "Connect Pipe", Tool.CONNECT_PIPE);
@@ -865,15 +865,15 @@ public class FinalGuiMain extends JFrame {
                         return "You are carrying a pipe. Click an empty tile directly next to your plumber to place it.";
                     }
                 }
-                return "Click any cistern to produce a pipe, then use Pick Up Pipe to carry it.";
+                return "Pick up a pipe first, then use Place Pipe to put it next to the plumber.";
             case ADD_PUMP:
                 if (gameSystem != null && gameSystem.getCurrentPlayer() instanceof Plumber) {
                     Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
                     if (plumber.isCarryingPump()) {
-                        return "You are carrying a pump. Stand on the target pipe and click that pipe to insert the pump.";
+                        return "You are carrying a pump. Stand on the target pipe and click that pipe to place it.";
                     }
                 }
-                return "Click any cistern to produce a pump, then use Pick Up Pump to carry it.";
+                return "Pick up a pump first, then use Place Pump while standing on the target pipe.";
             case REMOVE_PIPE:
                 return "Click a pipe to remove it.";
             case CONNECT_PIPE:
@@ -1032,26 +1032,23 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
-     * Produces a pipe at a cistern, or places the carried pipe near the plumber.
+     * Places the carried pipe near the plumber.
      *
-     * <p>Clean GUI flow: a plumber first produces/collects a pipe from a cistern,
-     * then may move while carrying it. When the plumber uses Add Pipe while
-     * carrying a pipe, the clicked target must be an empty tile directly next to
-     * the plumber's current position. The new pipe is connected to the plumber's
-     * current network element and keeps one free end for later connection.</p>
+     * <p>Pipes are produced automatically by cistern timers. This toolbar action
+     * is only for placing a pipe that the plumber is already carrying.</p>
      *
      * @param tile target tile
      * @param element clicked element
      */
     private void addPipeAt(Tile tile, NetworkElement element) {
-        if (!requireCurrentPlayer("Add Pipe", Plumber.class)) {
+        if (!requireCurrentPlayer("Place Pipe", Plumber.class)) {
             return;
         }
 
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
 
         if (!plumber.isCarryingPipe()) {
-            producePipeAtCistern(element);
+            setMessage("Pick up a pipe first, then use Place Pipe to put it next to the plumber.");
             return;
         }
 
@@ -1118,18 +1115,21 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
-     * Produces a pump at a cistern, or inserts the carried pump into a clicked pipe.
+     * Inserts the carried pump into the pipe where the plumber is standing.
+     *
+     * <p>Pumps are produced automatically by cistern timers. This toolbar action
+     * is only for placing a pump that the plumber is already carrying.</p>
      *
      * @param element clicked element
      */
     private void addPumpAt(NetworkElement element) {
-        if (!requireCurrentPlayer("Add Pump", Plumber.class)) {
+        if (!requireCurrentPlayer("Place Pump", Plumber.class)) {
             return;
         }
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
 
         if (!plumber.isCarryingPump()) {
-            producePumpAtCistern(element);
+            setMessage("Pick up a pump first, then use Place Pump while standing on the target pipe.");
             return;
         }
 
@@ -1164,11 +1164,11 @@ public class FinalGuiMain extends JFrame {
      */
     private void insertCarriedPumpIntoPipe(Plumber plumber, NetworkElement element) {
         if (!(element instanceof Pipe)) {
-            setMessage("Invalid placement. Stand on the target pipe, then click that pipe to insert the carried pump.");
+            setMessage("Invalid placement. Stand on the target pipe, then click that pipe to place the carried pump.");
             return;
         }
         if (plumber.getPosition() != element) {
-            setMessage("Add Pump requires the plumber to stand on the target pipe.");
+            setMessage("Place Pump requires the plumber to stand on the target pipe.");
             return;
         }
         Pipe oldPipe = (Pipe) element;
@@ -1188,7 +1188,7 @@ public class FinalGuiMain extends JFrame {
         pumpRotations.put(pump, 0);
         selectedElement = pump;
         placeNewPipeSegmentsAround(pump, baseTile);
-        consumeCurrentTurn("Pump added into the selected pipe.");
+        consumeCurrentTurn("Carried pump placed into the selected pipe.");
     }
 
     /**
@@ -3020,10 +3020,10 @@ public class FinalGuiMain extends JFrame {
         PICKUP_PIPE("Pick Up Pipe"),
         /** Picks up a pump. */
         PICKUP_PUMP("Pick Up Pump"),
-        /** Adds a pipe to the grid. */
-        ADD_PIPE("Add Pipe"),
-        /** Inserts a pump into a pipe. */
-        ADD_PUMP("Add Pump"),
+        /** Places a carried pipe on the grid. */
+        ADD_PIPE("Place Pipe"),
+        /** Places a carried pump into a pipe. */
+        ADD_PUMP("Place Pump"),
         /** Removes a pipe. */
         REMOVE_PIPE("Remove Pipe"),
         /** Connects a free pipe end. */

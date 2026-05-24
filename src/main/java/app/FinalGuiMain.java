@@ -84,6 +84,18 @@ public class FinalGuiMain extends JFrame {
     /** Number of rows in the playable grid. */
     private static final int GRID_ROWS = 7;
 
+    /** Maximum number of automatically stored pipes in one cistern. */
+    private static final int MAX_PIPES_PER_CISTERN = 3;
+
+    /** Maximum number of automatically stored pumps in one cistern. */
+    private static final int MAX_PUMPS_PER_CISTERN = 3;
+
+    /** Minimum delay for automatic cistern pipe/pump production. */
+    private static final int AUTO_COMPONENT_MIN_DELAY_MS = 7000;
+
+    /** Extra random delay for automatic cistern pipe/pump production. */
+    private static final int AUTO_COMPONENT_RANDOM_DELAY_MS = 1000;
+
     /** Card layout used to switch screens. */
     private final CardLayout cards;
 
@@ -155,6 +167,9 @@ public class FinalGuiMain extends JFrame {
 
     /** Timer that refreshes the HUD. */
     private Timer refreshTimer;
+
+    /** Timer that automatically produces pipes and pumps in cisterns. */
+    private Timer autoComponentProductionTimer;
 
     /** Dash phase shift for flowing water animation. */
     private float dashPhase;
@@ -684,6 +699,7 @@ public class FinalGuiMain extends JFrame {
         lastManualWaterFlowRound = 0;
         initializeGridPositions();
         startRefreshTimer();
+        startAutoComponentProductionTimer();
         setMessage("Select an object, then click a valid place on the map.");
         cards.show(root, GAME_CARD);
         root.revalidate();
@@ -733,6 +749,88 @@ public class FinalGuiMain extends JFrame {
             }
         });
         refreshTimer.start();
+    }
+
+    /**
+     * Starts automatic pipe and pump production for all cisterns.
+     * Each tick happens after a random 7-8 second delay. A cistern only
+     * produces a new component if its stored count is below the limit.
+     */
+    private void startAutoComponentProductionTimer() {
+        if (autoComponentProductionTimer != null) {
+            autoComponentProductionTimer.stop();
+        }
+        autoComponentProductionTimer = new Timer(randomAutoComponentDelay(), e -> {
+            if (gameSystem == null || !gameSystem.isRunning()) {
+                return;
+            }
+            int producedPipes = autoProducePipesInCisterns();
+            int producedPumps = autoProducePumpsInCisterns();
+            autoComponentProductionTimer.setDelay(randomAutoComponentDelay());
+            autoComponentProductionTimer.setInitialDelay(randomAutoComponentDelay());
+            if (producedPipes > 0 || producedPumps > 0) {
+                setMessage("Cistern automatically produced "
+                        + producedPipes + " pipe" + (producedPipes == 1 ? "" : "s")
+                        + " and "
+                        + producedPumps + " pump" + (producedPumps == 1 ? "." : "s."));
+            }
+            refreshView();
+        });
+        autoComponentProductionTimer.setRepeats(true);
+        autoComponentProductionTimer.start();
+    }
+
+    /**
+     * Returns a random automatic component-production delay between 7 and 8 seconds.
+     *
+     * @return delay in milliseconds
+     */
+    private int randomAutoComponentDelay() {
+        return AUTO_COMPONENT_MIN_DELAY_MS + (int) (Math.random() * (AUTO_COMPONENT_RANDOM_DELAY_MS + 1));
+    }
+
+    /**
+     * Produces one pipe in every cistern that is not full.
+     *
+     * @return number of pipes produced
+     */
+    private int autoProducePipesInCisterns() {
+        int produced = 0;
+        if (network == null) {
+            return produced;
+        }
+        for (NetworkElement element : network.getElements()) {
+            if (element instanceof Cistern) {
+                Cistern cistern = (Cistern) element;
+                if (cistern.getAvailablePipes() < MAX_PIPES_PER_CISTERN) {
+                    cistern.generatePipe();
+                    produced++;
+                }
+            }
+        }
+        return produced;
+    }
+
+    /**
+     * Produces one pump in every cistern that is not full.
+     *
+     * @return number of pumps produced
+     */
+    private int autoProducePumpsInCisterns() {
+        int produced = 0;
+        if (network == null) {
+            return produced;
+        }
+        for (NetworkElement element : network.getElements()) {
+            if (element instanceof Cistern) {
+                Cistern cistern = (Cistern) element;
+                if (cistern.getAvailablePumps() < MAX_PUMPS_PER_CISTERN) {
+                    cistern.generatePump();
+                    produced++;
+                }
+            }
+        }
+        return produced;
     }
 
     /**
@@ -971,6 +1069,10 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Cistern cistern = (Cistern) element;
+        if (cistern.getAvailablePipes() >= MAX_PIPES_PER_CISTERN) {
+            setMessage("This cistern already has the maximum of " + MAX_PIPES_PER_CISTERN + " stored pipes.");
+            return;
+        }
         cistern.generatePipe();
         selectedElement = cistern;
         consumeCurrentTurn("New pipe produced at the cistern. Use Pick Up Pipe to carry it.");
@@ -1045,6 +1147,10 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Cistern cistern = (Cistern) element;
+        if (cistern.getAvailablePumps() >= MAX_PUMPS_PER_CISTERN) {
+            setMessage("This cistern already has the maximum of " + MAX_PUMPS_PER_CISTERN + " stored pumps.");
+            return;
+        }
         cistern.generatePump();
         selectedElement = cistern;
         consumeCurrentTurn("New pump produced at the cistern. Use Pick Up Pump to carry it.");
@@ -1633,6 +1739,9 @@ public class FinalGuiMain extends JFrame {
         if (refreshTimer != null) {
             refreshTimer.stop();
         }
+        if (autoComponentProductionTimer != null) {
+            autoComponentProductionTimer.stop();
+        }
         ScoreBoard scoreBoard = gameSystem.getScoreBoard();
         Team winner = scoreBoard.determineWinner();
         gameSystem.endGame();
@@ -1800,7 +1909,17 @@ public class FinalGuiMain extends JFrame {
             }
             builder.append("\n");
         }
-        builder.append("Pipes:\n");
+        builder.append("Cistern storage:\n");
+        for (NetworkElement element : network.getElements()) {
+            if (element instanceof Cistern) {
+                Cistern cistern = (Cistern) element;
+                builder.append(describe(cistern))
+                        .append(" Pipes: ").append(cistern.getAvailablePipes()).append("/").append(MAX_PIPES_PER_CISTERN)
+                        .append(" Pumps: ").append(cistern.getAvailablePumps()).append("/").append(MAX_PUMPS_PER_CISTERN)
+                        .append('\n');
+            }
+        }
+        builder.append("\nPipes:\n");
         for (Pipe pipe : network.getPipes()) {
             builder.append(describe(pipe));
             if (pipe.isPunctured()) {

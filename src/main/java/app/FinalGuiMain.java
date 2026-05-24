@@ -759,7 +759,7 @@ public class FinalGuiMain extends JFrame {
             case PICKUP_PIPE:
                 return "Select any cistern with an available pipe to pick up a pipe.";
             case PICKUP_PUMP:
-                return "Select a Cistern connected to your position to pick up a pump.";
+                return "Select any cistern with an available pump to pick up a pump.";
             case ADD_PIPE:
                 if (gameSystem != null && gameSystem.getCurrentPlayer() instanceof Plumber) {
                     Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
@@ -767,9 +767,15 @@ public class FinalGuiMain extends JFrame {
                         return "You are carrying a pipe. Click an empty tile directly next to your plumber to place it.";
                     }
                 }
-                return "Click a cistern to produce a pipe, then use Pick Up Pipe to carry it.";
+                return "Click any cistern to produce a pipe, then use Pick Up Pipe to carry it.";
             case ADD_PUMP:
-                return "Click a pipe you stand on to insert the carried pump.";
+                if (gameSystem != null && gameSystem.getCurrentPlayer() instanceof Plumber) {
+                    Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+                    if (plumber.isCarryingPump()) {
+                        return "You are carrying a pump. Stand on the target pipe and click that pipe to insert the pump.";
+                    }
+                }
+                return "Click any cistern to produce a pump, then use Pick Up Pump to carry it.";
             case REMOVE_PIPE:
                 return "Click a pipe to remove it.";
             case CONNECT_PIPE:
@@ -914,10 +920,6 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Cistern cistern = (Cistern) element;
-        if (!currentPlayerCanReach(cistern)) {
-            setMessage("You must stand adjacent to the cistern to pick up a pump.");
-            return;
-        }
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
         if (plumber.isCarryingPump()) {
             setMessage("You are already carrying a pump.");
@@ -959,20 +961,15 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
-     * Produces one pipe at a reachable cistern.
+     * Produces one pipe at any selected cistern.
      *
      * @param element clicked element
      */
     private void producePipeAtCistern(NetworkElement element) {
         if (!(element instanceof Cistern)) {
-            setMessage("Click a cistern to produce a pipe, then use Pick Up Pipe to carry it.");
+            setMessage("Click any cistern to produce a pipe, then use Pick Up Pipe to carry it.");
             return;
         }
-        if (!currentPlayerCanReach(element)) {
-            setMessage("The plumber must stand near the cistern network to produce a pipe there.");
-            return;
-        }
-
         Cistern cistern = (Cistern) element;
         cistern.generatePipe();
         selectedElement = cistern;
@@ -1019,7 +1016,7 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
-     * Inserts a pump into a clicked pipe.
+     * Produces a pump at a cistern, or inserts the carried pump into a clicked pipe.
      *
      * @param element clicked element
      */
@@ -1028,23 +1025,56 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+
         if (!plumber.isCarryingPump()) {
-            setMessage("You must pick up a pump from a cistern first.");
+            producePumpAtCistern(element);
             return;
         }
+
+        insertCarriedPumpIntoPipe(plumber, element);
+    }
+
+    /**
+     * Produces one pump at any selected cistern.
+     *
+     * @param element clicked element
+     */
+    private void producePumpAtCistern(NetworkElement element) {
+        if (!(element instanceof Cistern)) {
+            setMessage("Click any cistern to produce a pump, then use Pick Up Pump to carry it.");
+            return;
+        }
+        Cistern cistern = (Cistern) element;
+        cistern.generatePump();
+        selectedElement = cistern;
+        consumeCurrentTurn("New pump produced at the cistern. Use Pick Up Pump to carry it.");
+    }
+
+    /**
+     * Inserts the carried pump into the pipe where the plumber is standing.
+     *
+     * @param plumber current plumber
+     * @param element clicked element
+     */
+    private void insertCarriedPumpIntoPipe(Plumber plumber, NetworkElement element) {
         if (!(element instanceof Pipe)) {
-            setMessage("Invalid placement. Click a pipe to insert a pump.");
+            setMessage("Invalid placement. Stand on the target pipe, then click that pipe to insert the carried pump.");
             return;
         }
-        if (!requireCurrentPosition(element, "Insert Pump")) {
+        if (plumber.getPosition() != element) {
+            setMessage("Add Pump requires the plumber to stand on the target pipe.");
             return;
         }
         Pipe oldPipe = (Pipe) element;
         Tile baseTile = elementTiles.get(oldPipe);
         Pump pump = new Pump(network.generateId());
-        
+
         plumber.insertPump(oldPipe, pump, network);
-        
+        if (plumber.isCarryingPump() || !network.getElements().contains(pump)) {
+            setMessage("Pump could not be inserted here. Stand on the target pipe and try again.");
+            return;
+        }
+
         elementTiles.remove(oldPipe);
         pipeRotations.remove(oldPipe);
 

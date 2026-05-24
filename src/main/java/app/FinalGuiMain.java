@@ -757,11 +757,17 @@ public class FinalGuiMain extends JFrame {
     private String instructionFor(Tool tool) {
         switch (tool) {
             case PICKUP_PIPE:
-                return "Select a Cistern connected to your position to pick up a pipe.";
+                return "Select any cistern with an available pipe to pick up a pipe.";
             case PICKUP_PUMP:
                 return "Select a Cistern connected to your position to pick up a pump.";
             case ADD_PIPE:
-                return "Select a cistern, then click an adjacent empty grid tile to place the carried pipe.";
+                if (gameSystem != null && gameSystem.getCurrentPlayer() instanceof Plumber) {
+                    Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+                    if (plumber.isCarryingPipe()) {
+                        return "You are carrying a pipe. Click an empty tile directly next to your plumber to place it.";
+                    }
+                }
+                return "Click a cistern to produce a pipe, then use Pick Up Pipe to carry it.";
             case ADD_PUMP:
                 return "Click a pipe you stand on to insert the carried pump.";
             case REMOVE_PIPE:
@@ -881,10 +887,6 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Cistern cistern = (Cistern) element;
-        if (!currentPlayerCanReach(cistern)) {
-            setMessage("You must stand adjacent to the cistern to pick up a pipe.");
-            return;
-        }
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
         if (plumber.isCarryingPipe()) {
             setMessage("You are already carrying a pipe.");
@@ -930,7 +932,13 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
-     * Adds a pipe to an adjacent empty tile.
+     * Produces a pipe at a cistern, or places the carried pipe near the plumber.
+     *
+     * <p>Clean GUI flow: a plumber first produces/collects a pipe from a cistern,
+     * then may move while carrying it. When the plumber uses Add Pipe while
+     * carrying a pipe, the clicked target must be an empty tile directly next to
+     * the plumber's current position. The new pipe is connected to the plumber's
+     * current network element and keeps one free end for later connection.</p>
      *
      * @param tile target tile
      * @param element clicked element
@@ -939,37 +947,75 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPlayer("Add Pipe", Plumber.class)) {
             return;
         }
+
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+
         if (!plumber.isCarryingPipe()) {
-            setMessage("You must pick up a pipe from a cistern first.");
+            producePipeAtCistern(element);
             return;
         }
-        if (element != null) {
-            if (!(element instanceof Cistern)) {
-                setMessage("New pipes are placed adjacent to cisterns. Select the cistern first.");
-                return;
-            }
-            if (!currentPlayerCanReach(element)) {
-                setMessage("Add Pipe requires the plumber to stand next to the cistern network.");
-                return;
-            }
-            selectedElement = element;
-            setMessage("Cistern selected. Click an adjacent empty tile to place the new pipe.");
+
+        placeCarriedPipeNearPlumber(plumber, tile, element);
+    }
+
+    /**
+     * Produces one pipe at a reachable cistern.
+     *
+     * @param element clicked element
+     */
+    private void producePipeAtCistern(NetworkElement element) {
+        if (!(element instanceof Cistern)) {
+            setMessage("Click a cistern to produce a pipe, then use Pick Up Pipe to carry it.");
             return;
         }
-        if (!(selectedElement instanceof Cistern) || tile == null
-                || !isAdjacent(tile, elementTiles.get(selectedElement))) {
-            setMessage("Invalid placement. Select the cistern and then an adjacent empty tile.");
+        if (!currentPlayerCanReach(element)) {
+            setMessage("The plumber must stand near the cistern network to produce a pipe there.");
+            return;
+        }
+
+        Cistern cistern = (Cistern) element;
+        cistern.generatePipe();
+        selectedElement = cistern;
+        consumeCurrentTurn("New pipe produced at the cistern. Use Pick Up Pipe to carry it.");
+    }
+
+    /**
+     * Places the carried pipe on an empty tile beside the plumber.
+     *
+     * @param plumber current plumber
+     * @param tile clicked tile
+     * @param element clicked element, or null for an empty tile
+     */
+    private void placeCarriedPipeNearPlumber(Plumber plumber, Tile tile, NetworkElement element) {
+        NetworkElement currentPosition = plumber.getPosition();
+        Tile playerTile = elementTiles.get(currentPosition);
+
+        if (currentPosition == null || playerTile == null) {
+            setMessage("The plumber must stand on a pipe or pump before placing a carried pipe.");
+            return;
+        }
+        if (tile == null || element != null) {
+            setMessage("Click an empty tile directly next to the plumber to place the carried pipe.");
+            return;
+        }
+        if (!isAdjacent(tile, playerTile)) {
+            setMessage("Invalid placement. The carried pipe must be placed on an empty tile next to the plumber.");
             return;
         }
 
         Pipe pipe = new Pipe(network.generateId());
-        plumber.placeNewPipe(pipe, selectedElement, null, network);
-        
+        plumber.placeNewPipe(pipe, currentPosition, null, network);
+
+        if (!network.getElements().contains(pipe)) {
+            setMessage("Pipe could not be placed here. Try another empty neighboring tile.");
+            return;
+        }
+
         elementTiles.put(pipe, tile);
-        pipeRotations.put(pipe, 0);
+        pipeRotations.put(pipe, rotationFromTo(playerTile, tile));
         selectedElement = pipe;
-        consumeCurrentTurn("Pipe added. It has one free end until connected.");
+        selectedTile = tile;
+        consumeCurrentTurn("Carried pipe placed next to the plumber. It has one free end until connected.");
     }
 
     /**
@@ -1806,6 +1852,23 @@ public class FinalGuiMain extends JFrame {
         int rowDistance = Math.abs(pipeTile.row - targetTile.row);
         return (colDistance == 2 && rowDistance == 0) || (rowDistance == 2 && colDistance == 0);
     }
+    /**
+     * Returns a simple sprite rotation based on placement direction.
+     *
+     * @param from origin tile
+     * @param to target tile
+     * @return rotation step used by the renderer
+     */
+    private int rotationFromTo(Tile from, Tile to) {
+        if (from == null || to == null) {
+            return 0;
+        }
+        if (to.row != from.row) {
+            return 1;
+        }
+        return 0;
+    }
+
     /**
      * Checks if two tiles are orthogonally adjacent.
      *

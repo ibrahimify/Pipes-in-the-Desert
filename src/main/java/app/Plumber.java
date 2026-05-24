@@ -184,7 +184,13 @@ public class Plumber extends Player {
     }
 
     /**
-     * Collects one available pipe from a neighboring cistern.
+     * Collects one available pipe from any cistern.
+     *
+     * <p>
+     * GUI rule: after a cistern has produced pipes, a plumber may pick one up
+     * from that cistern without standing next to it. The pipe is treated as
+     * inventory and can later be placed beside the plumber.
+     * </p>
      *
      * @param cistern cistern that stores generated pipes
      */
@@ -192,7 +198,6 @@ public class Plumber extends Player {
         if (!canAct()
                 || cistern == null
                 || carriedPipe
-                || !canReachCistern(cistern)
                 || !cistern.hasAvailablePipe()) {
             return;
         }

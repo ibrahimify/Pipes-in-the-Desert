@@ -1096,7 +1096,7 @@ public class FinalGuiMain extends JFrame {
             setMessage("Selected pipe has no free end.");
             return;
         }
-        if (!isAdjacent(elementTiles.get(pipe), elementTiles.get(element))) {
+        if (!isConnectableOnMap(pipe, element)) {
             setMessage("Invalid connection. Elements must be adjacent on the grid.");
             return;
         }
@@ -1105,12 +1105,55 @@ public class FinalGuiMain extends JFrame {
         plumber.connectPipeEnd(pipe, element);
         
         if (network.areAdjacent(pipe, element)) {
+            if (element instanceof Pump) {
+                restorePumpDirectionAfterReconnect((Pump) element, pipe);
+            }
             consumeCurrentTurn("Free pipe end connected.");
         } else {
             setMessage("Connection failed.");
         }
     }
 
+    /**
+     * Restores pump direction after a disconnected pipe is attached again.
+     *
+     * @param pump pump that received the pipe
+     * @param reconnectedPipe pipe attached to the pump
+     */
+    private void restorePumpDirectionAfterReconnect(Pump pump, Pipe reconnectedPipe) {
+        Pipe input = pump.getActiveInput();
+        Pipe output = pump.getActiveOutput();
+
+        if (input == null && output != null && output != reconnectedPipe) {
+            pump.setDirection(reconnectedPipe, output);
+            return;
+        }
+        if (output == null && input != null && input != reconnectedPipe) {
+            pump.setDirection(input, reconnectedPipe);
+            return;
+        }
+        if (input != null && output != null) {
+            return;
+        }
+
+        List<Pipe> connected = new ArrayList<>(pump.getConnectedPipes());
+        if (connected.size() < 2) {
+            return;
+        }
+        connected.sort((first, second) -> {
+            Tile firstTile = elementTiles.get(first);
+            Tile secondTile = elementTiles.get(second);
+            if (firstTile == null || secondTile == null) {
+                return Integer.compare(first.getId(), second.getId());
+            }
+            int rowCompare = Integer.compare(firstTile.row, secondTile.row);
+            if (rowCompare != 0) {
+                return rowCompare;
+            }
+            return Integer.compare(firstTile.col, secondTile.col);
+        });
+        pump.setDirection(connected.get(0), connected.get(connected.size() - 1));
+    }
     /**
      * Disconnects a selected pipe from one neighboring element.
      *
@@ -1742,6 +1785,27 @@ public class FinalGuiMain extends JFrame {
                 + "64x64 grid tile. The bottom bar explains the next required click.";
     }
 
+    /**
+     * Checks whether a free pipe end can visually connect to a target element.
+     * Pipes are drawn between active elements, so the center tiles may be two cells apart.
+     *
+     * @param pipe selected free-end pipe
+     * @param target target network element
+     * @return true if the pipe and target are visually connectable
+     */
+    private boolean isConnectableOnMap(Pipe pipe, NetworkElement target) {
+        Tile pipeTile = elementTiles.get(pipe);
+        Tile targetTile = elementTiles.get(target);
+        if (isAdjacent(pipeTile, targetTile)) {
+            return true;
+        }
+        if (pipeTile == null || targetTile == null || target instanceof Pipe) {
+            return false;
+        }
+        int colDistance = Math.abs(pipeTile.col - targetTile.col);
+        int rowDistance = Math.abs(pipeTile.row - targetTile.row);
+        return (colDistance == 2 && rowDistance == 0) || (rowDistance == 2 && colDistance == 0);
+    }
     /**
      * Checks if two tiles are orthogonally adjacent.
      *

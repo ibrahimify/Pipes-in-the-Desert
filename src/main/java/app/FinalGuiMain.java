@@ -165,6 +165,12 @@ public class FinalGuiMain extends JFrame {
     /** Map of toolbar buttons for dynamic role-based disabling. */
     private final Map<Tool, JButton> toolButtons;
 
+    /** GUI-side round counter used to prevent repeated manual water-flow scoring. */
+    private int guiRoundNumber;
+
+    /** Last GUI round in which the Water Flow button already recalculated scores. */
+    private int lastManualWaterFlowRound;
+
     /**
      * Starts the final graphical program.
      *
@@ -202,6 +208,8 @@ public class FinalGuiMain extends JFrame {
         this.pipeRotations = new HashMap<>();
         this.pumpRotations = new HashMap<>();
         this.toolButtons = new HashMap<>();
+        this.guiRoundNumber = 1;
+        this.lastManualWaterFlowRound = 0;
         this.dashPhase = 0.0f;
         this.animTimer = new Timer(50, e -> {
             dashPhase -= 1.5f;
@@ -577,10 +585,7 @@ public class FinalGuiMain extends JFrame {
         addTool(toolbar, "Move", Tool.MOVE);
 
         JButton flow = pixelButton("Water Flow");
-        flow.addActionListener(e -> {
-            recalculateFlow();
-            setMessage("Water flow recalculated. Scores updated.");
-        });
+        flow.addActionListener(e -> handleManualWaterFlow());
         toolbar.add(flow);
 
         JButton endTurn = pixelButton("End Turn");
@@ -675,6 +680,8 @@ public class FinalGuiMain extends JFrame {
         selectedElement = null;
         selectedTile = null;
         activeTool = Tool.SELECT;
+        guiRoundNumber = 1;
+        lastManualWaterFlowRound = 0;
         initializeGridPositions();
         startRefreshTimer();
         setMessage("Select an object, then click a valid place on the map.");
@@ -774,7 +781,7 @@ public class FinalGuiMain extends JFrame {
             case REPAIR_PUMP:
                 return "Click a broken pump to repair it.";
             case BREAK_PUMP:
-                return "Click a pump to trigger a breakdown.";
+                return "Saboteur only: click the pump you stand on to break it.";
             case CHANGE_DIRECTION:
                 return "Click a pump to rotate its input-output direction.";
             case MOVE:
@@ -1241,13 +1248,18 @@ public class FinalGuiMain extends JFrame {
      * @param element clicked element
      */
     private void breakPump(NetworkElement element) {
+        if (!requireCurrentPlayer("Break Pump", Saboteur.class)) {
+            return;
+        }
         if (!(element instanceof Pump)) {
             setMessage("Select a pump to break.");
             return;
         }
+        if (!requireCurrentPosition(element, "Break Pump")) {
+            return;
+        }
         ((Pump) element).breakDown();
-        recalculateFlow();
-        setMessage("Pump broken. Water cannot pass through it.");
+        consumeCurrentTurn("Pump broken. Water cannot pass through it.");
     }
 
     /**
@@ -1301,6 +1313,25 @@ public class FinalGuiMain extends JFrame {
         
         pumpRotations.put(pump, (pumpRotations.getOrDefault(pump, 0) + 1) % 4);
         consumeCurrentTurn("Pump direction changed.");
+    }
+
+    /**
+     * Runs manual water-flow scoring at most once in the current GUI round.
+     */
+    private void handleManualWaterFlow() {
+        if (gameSystem == null || !gameSystem.isRunning()) {
+            setMessage("Start a game before recalculating water flow.");
+            return;
+        }
+        if (lastManualWaterFlowRound == guiRoundNumber) {
+            refreshView();
+            setMessage("Water flow already recalculated for this round.");
+            return;
+        }
+
+        recalculateFlow();
+        lastManualWaterFlowRound = guiRoundNumber;
+        setMessage("Water flow recalculated. Scores updated.");
     }
 
     /**
@@ -1424,8 +1455,20 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         gameSystem.nextTurn();
+        updateGuiRoundAfterTurnAdvance();
         setMessage(message);
         refreshView();
+    }
+
+    /**
+     * Advances the GUI round counter when turn order wraps to the first player.
+     */
+    private void updateGuiRoundAfterTurnAdvance() {
+        List<Player> players = allPlayers();
+        Player current = gameSystem != null ? gameSystem.getCurrentPlayer() : null;
+        if (!players.isEmpty() && current == players.get(0)) {
+            guiRoundNumber++;
+        }
     }
 
     /**
@@ -1571,7 +1614,7 @@ public class FinalGuiMain extends JFrame {
                     || tool == Tool.DISCONNECT_PIPE || tool == Tool.REPAIR_PIPE || tool == Tool.REMOVE_PUMP 
                     || tool == Tool.REPAIR_PUMP) {
                 enabled = isPlumber;
-            } else if (tool == Tool.PUNCTURE_PIPE) {
+            } else if (tool == Tool.PUNCTURE_PIPE || tool == Tool.BREAK_PUMP) {
                 enabled = isSaboteur;
             } else if (tool == Tool.CHANGE_DIRECTION) {
                 enabled = isPlumber || isSaboteur;

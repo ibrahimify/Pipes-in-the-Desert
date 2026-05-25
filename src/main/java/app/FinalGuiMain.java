@@ -2792,7 +2792,7 @@ public class FinalGuiMain extends JFrame {
             double time = java.lang.System.currentTimeMillis() / 150.0;
             g.setColor(new Color(64, 180, 255, 230));
             for (Pipe pipe : network.getPipes()) {
-                if (pipe.isPunctured() || hasOpenPipeEnd(pipe)) {
+                if (shouldDrawWaterSpray(pipe)) {
                     Tile tile = elementTiles.get(pipe);
                     if (tile != null) {
                         Point center = tile.center();
@@ -2808,6 +2808,80 @@ public class FinalGuiMain extends JFrame {
             }
         }
 
+        /**
+         * Checks whether a pipe should show the leak/free-end water spray effect.
+         *
+         * @param pipe pipe to inspect
+         * @return true if water actually reaches a punctured or open-ended pipe
+         */
+        private boolean shouldDrawWaterSpray(Pipe pipe) {
+            return pipe != null
+                    && (pipe.isPunctured() || hasOpenPipeEnd(pipe))
+                    && isPipeReachedByWater(pipe);
+        }
+
+        /**
+         * Checks whether water reaches a pipe through the active spring/pump route.
+         *
+         * @param target pipe to search for
+         * @return true if the active route reaches the target pipe
+         */
+        private boolean isPipeReachedByWater(Pipe target) {
+            if (network == null || target == null) {
+                return false;
+            }
+            for (Spring spring : network.getSprings()) {
+                Pipe output = spring.getOutputPipe();
+                if (reachesPipeFrom(output, spring, target, new java.util.HashSet<NetworkElement>())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Traverses the active water route until a target pipe is found or flow stops.
+         *
+         * @param current current pipe in the route
+         * @param previous previous element in the route
+         * @param target pipe to find
+         * @param visited already visited elements
+         * @return true if water reaches the target pipe
+         */
+        private boolean reachesPipeFrom(Pipe current, NetworkElement previous, Pipe target,
+                java.util.Set<NetworkElement> visited) {
+            if (current == null || !visited.add(current) || !isPipeAlignedForFlow(current)) {
+                return false;
+            }
+            if (current == target) {
+                return true;
+            }
+            if (current.isPunctured() || hasOpenPipeEnd(current)) {
+                return false;
+            }
+
+            for (NetworkElement neighbor : current.getNeighbors()) {
+                if (neighbor == previous || neighbor instanceof Cistern) {
+                    continue;
+                }
+                if (neighbor instanceof Pipe
+                        && reachesPipeFrom((Pipe) neighbor, current, target, visited)) {
+                    return true;
+                }
+                if (neighbor instanceof Pump) {
+                    Pump pump = (Pump) neighbor;
+                    Pipe output = pump.getActiveOutput();
+                    if (!pump.isBroken()
+                            && pump.getActiveInput() == current
+                            && output != null
+                            && output != current
+                            && reachesPipeFrom(output, pump, target, visited)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
         /**
          * Checks if a pipe can carry visible flow.
          *

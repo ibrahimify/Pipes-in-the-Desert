@@ -4,6 +4,10 @@ Software Project Laboratory - BME (BMEVIIIAB02)
 ## Overview
 Pipes in the Desert is a strategy-based simulation game developed as part of the Software Project Laboratory course. The game models a dynamic water distribution system where two opposing teams (Plumbers and Saboteurs) compete to either maximize water delivery or increase water loss.
 
+<p align="center">
+  <img src="assets/gamerecord/gamerecord.gif" alt="Pipes in the Desert" width="800"/>
+</p>
+
 ## Project Structure
 ```
 Pipes in the Desert/
@@ -27,7 +31,7 @@ Pipes in the Desert/
 
 The old `code/` layout has been archived under `archive/legacy-code-layout/`. Packaged release output is not required for normal development; use the root Maven project instead.
 
-## Documentation Status (as of May 23)
+## Documentation Status (as of May 26)
 
 Completed:
 - 00 - Cover

@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -162,6 +163,15 @@ public class FinalGuiMain extends JFrame {
     /** Timer that runs the high FPS animation loop. */
     private Timer animTimer;
 
+    /** Timer that generates random cistern material every ten seconds. */
+    private Timer materialGenerationTimer;
+
+    /** Random source for cistern material generation. */
+    private final Random materialRandom;
+
+    /** Temporary popups shown above cisterns when materials are generated. */
+    private final Map<Cistern, MaterialPopup> materialPopups;
+
     /** Map of toolbar buttons for dynamic role-based disabling. */
     private final Map<Tool, JButton> toolButtons;
 
@@ -208,6 +218,8 @@ public class FinalGuiMain extends JFrame {
         this.pipeRotations = new HashMap<>();
         this.pumpRotations = new HashMap<>();
         this.toolButtons = new HashMap<>();
+        this.materialRandom = new Random();
+        this.materialPopups = new HashMap<>();
         this.guiRoundNumber = 1;
         this.lastManualWaterFlowRound = 0;
         this.dashPhase = 0.0f;
@@ -680,10 +692,12 @@ public class FinalGuiMain extends JFrame {
         selectedElement = null;
         selectedTile = null;
         activeTool = Tool.SELECT;
+        materialPopups.clear();
         guiRoundNumber = 1;
         lastManualWaterFlowRound = 0;
         initializeGridPositions();
         startRefreshTimer();
+        startMaterialGenerationTimer();
         setMessage("Select an object, then click a valid place on the map.");
         cards.show(root, GAME_CARD);
         root.revalidate();
@@ -723,6 +737,9 @@ public class FinalGuiMain extends JFrame {
         if (refreshTimer != null) {
             refreshTimer.stop();
         }
+        if (materialGenerationTimer != null) {
+            materialGenerationTimer.stop();
+        }
         refreshTimer = new Timer(1000, e -> {
             if (gameSystem != null && gameSystem.isRunning()) {
                 if (gameSystem.checkEndCondition()) {
@@ -733,6 +750,47 @@ public class FinalGuiMain extends JFrame {
             }
         });
         refreshTimer.start();
+    }
+    /**
+     * Starts timed random material generation at every cistern.
+     */
+    private void startMaterialGenerationTimer() {
+        if (materialGenerationTimer != null) {
+            materialGenerationTimer.stop();
+        }
+        materialGenerationTimer = new Timer(10000, e -> generateRandomCisternMaterials());
+        materialGenerationTimer.start();
+    }
+
+    /**
+     * Generates either one pipe or one pump at each cistern.
+     */
+    private void generateRandomCisternMaterials() {
+        if (gameSystem == null || !gameSystem.isRunning() || network == null) {
+            return;
+        }
+        for (Cistern cistern : network.getCisterns()) {
+            String generated;
+            if (materialRandom.nextBoolean()) {
+                cistern.generatePipe();
+                generated = "+1 Pipe";
+            } else {
+                cistern.generatePump();
+                generated = "+1 Pump";
+            }
+            showMaterialPopup(cistern, generated);
+        }
+        refreshView();
+    }
+
+    /**
+     * Shows a temporary generated-material label above a cistern.
+     *
+     * @param cistern cistern that generated material
+     * @param text popup text
+     */
+    private void showMaterialPopup(Cistern cistern, String text) {
+        materialPopups.put(cistern, new MaterialPopup(text, java.lang.System.currentTimeMillis() + 2500L));
     }
 
     /**
@@ -945,33 +1003,70 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         if (element != null) {
-            if (!(element instanceof Cistern)) {
-                setMessage("New pipes are placed adjacent to cisterns. Select the cistern first.");
+            if (!(element instanceof Cistern) && !(element instanceof Pump) && !(element instanceof Pipe)) {
+                setMessage("New pipes are placed adjacent to cisterns, pumps, or pipes. Select the element first.");
+                return;
+            }
+            if (element instanceof Pipe && !hasOpenPipeEnd((Pipe) element)) {
+                setMessage("That pipe has no free end for the new pipe.");
                 return;
             }
             if (!currentPlayerCanReach(element)) {
-                setMessage("Add Pipe requires the plumber to stand next to the cistern network.");
+                setMessage("Add Pipe requires the plumber to stand on or next to the selected network element.");
                 return;
             }
             selectedElement = element;
-            setMessage("Cistern selected. Click an adjacent empty tile to place the new pipe.");
+            setMessage("Element selected. Click an adjacent empty tile to place the new pipe.");
             return;
         }
-        if (!(selectedElement instanceof Cistern) || tile == null
-                || !isAdjacent(tile, elementTiles.get(selectedElement))) {
-            setMessage("Invalid placement. Select the cistern and then an adjacent empty tile.");
+        if (!((selectedElement instanceof Cistern) || (selectedElement instanceof Pump) || (selectedElement instanceof Pipe))
+                || tile == null || !isAdjacent(tile, elementTiles.get(selectedElement))) {
+            setMessage("Invalid placement. Select a cistern, pump, or pipe and then an adjacent empty tile.");
+            return;
+        }
+        if (selectedElement instanceof Pipe && !hasOpenPipeEnd((Pipe) selectedElement)) {
+            setMessage("That pipe has no free end for the new pipe.");
             return;
         }
 
+        NetworkElement anchor = selectedElement;
         Pipe pipe = new Pipe(network.generateId());
-        plumber.placeNewPipe(pipe, selectedElement, null, network);
-        
+        plumber.placeNewPipe(pipe, anchor, null, network);
+        if (!network.areAdjacent(pipe, anchor)) {
+            setMessage("Pipe placement failed.");
+            return;
+        }
+        if (anchor instanceof Pipe) {
+            Pipe anchorPipe = (Pipe) anchor;
+            if (!anchorPipe.hasFreeEnd() && hasOpenPipeEnd(anchorPipe)) {
+                anchorPipe.disconnectEnd();
+            }
+            if (anchorPipe.hasFreeEnd()) {
+                anchorPipe.connectFreeEnd(pipe);
+            }
+        }
+
         elementTiles.put(pipe, tile);
-        pipeRotations.put(pipe, 0);
+        pipeRotations.put(pipe, rotationForPipePlacement(elementTiles.get(anchor), tile));
         selectedElement = pipe;
         consumeCurrentTurn("Pipe added. It has one free end until connected.");
     }
-
+    /**
+     * Selects the pipe sprite rotation from the relative position of the anchor.
+     *
+     * @param anchorTile tile of the cistern or pump used as anchor
+     * @param pipeTile tile where the pipe is placed
+     * @return rotation index for the pipe sprite
+     */
+    private int rotationForPipePlacement(Tile anchorTile, Tile pipeTile) {
+        if (anchorTile == null || pipeTile == null) {
+            return 0;
+        }
+        if (anchorTile.col == pipeTile.col) {
+            return 1;
+        }
+        return 0;
+    }
     /**
      * Inserts a pump into a clicked pipe.
      *
@@ -1059,6 +1154,15 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
+     * Treats a pipe as having a free end if the model flag is set or if it has fewer than two real connections.
+     *
+     * @param pipe pipe to inspect
+     * @return true if the pipe has an open end
+     */
+    private boolean hasOpenPipeEnd(Pipe pipe) {
+        return pipe != null && (pipe.hasFreeEnd() || pipe.getNeighbors().size() < 2);
+    }
+    /**
      * Connects a free-end pipe to a neighboring clicked element.
      *
      * @param element clicked element
@@ -1067,13 +1171,13 @@ public class FinalGuiMain extends JFrame {
         if (!requireCurrentPlayer("Connect Pipe", Plumber.class)) {
             return;
         }
-        if (element instanceof Pipe) {
+        if (element instanceof Pipe && (!(selectedElement instanceof Pipe) || selectedElement == element)) {
             if (!currentPlayerCanReach(element)) {
                 setMessage("Connect Pipe requires the plumber to stand on or next to the pipe.");
                 return;
             }
             Pipe clickedPipe = (Pipe) element;
-            if (!clickedPipe.hasFreeEnd()) {
+            if (!hasOpenPipeEnd(clickedPipe)) {
                 selectedElement = null;
                 setMessage("That pipe has no free end. Disconnect it first, or use a newly added free pipe.");
                 return;
@@ -1092,7 +1196,7 @@ public class FinalGuiMain extends JFrame {
             setMessage("Connect Pipe requires the plumber to stand on or next to the selected pipe.");
             return;
         }
-        if (!pipe.hasFreeEnd()) {
+        if (!hasOpenPipeEnd(pipe)) {
             setMessage("Selected pipe has no free end.");
             return;
         }
@@ -1101,12 +1205,18 @@ public class FinalGuiMain extends JFrame {
             return;
         }
 
+        if (!pipe.hasFreeEnd() && hasOpenPipeEnd(pipe)) {
+            pipe.disconnectEnd();
+        }
+
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
         plumber.connectPipeEnd(pipe, element);
         
         if (network.areAdjacent(pipe, element)) {
             if (element instanceof Pump) {
                 restorePumpDirectionAfterReconnect((Pump) element, pipe);
+            } else if (element instanceof Pipe && ((Pipe) element).hasFreeEnd()) {
+                ((Pipe) element).connectFreeEnd(pipe);
             }
             consumeCurrentTurn("Free pipe end connected.");
         } else {
@@ -1538,9 +1648,50 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
+     * Checks whether a pipe is aligned for water flow in the GUI.
+     *
+     * @param pipe pipe to inspect
+     * @return true if pipe rotation permits flow
+     */
+    private boolean isPipeAlignedForFlow(Pipe pipe) {
+        return pipeRotations.getOrDefault(pipe, 0) == 0;
+    }
+
+    /**
+     * Checks whether the visible spring-to-cistern path is open.
+     *
+     * @return true if water flow may be recalculated
+     */
+    private boolean isVisualWaterPathOpen() {
+        if (network == null) {
+            return true;
+        }
+        for (Spring spring : network.getSprings()) {
+            Pipe output = spring.getOutputPipe();
+            if (output != null && !isPipeAlignedForFlow(output)) {
+                setMessage("Water flow blocked. Turn the pipe back to connect the route.");
+                return false;
+            }
+        }
+        for (Pump pump : network.getPumps()) {
+            Pipe input = pump.getActiveInput();
+            Pipe output = pump.getActiveOutput();
+            if ((input != null && !isPipeAlignedForFlow(input))
+                    || (output != null && !isPipeAlignedForFlow(output))) {
+                setMessage("Water flow blocked. Turn the pipe back to connect the route.");
+                return false;
+            }
+        }
+        return true;
+    }
+    /**
      * Recalculates flow after state changes.
      */
     private void recalculateFlow() {
+        if (!isVisualWaterPathOpen()) {
+            refreshView();
+            return;
+        }
         if (gameSystem != null && gameSystem.getWaterFlowManager() != null) {
             gameSystem.getWaterFlowManager().recalculateFlow();
         }
@@ -1556,6 +1707,9 @@ public class FinalGuiMain extends JFrame {
         }
         if (refreshTimer != null) {
             refreshTimer.stop();
+        }
+        if (materialGenerationTimer != null) {
+            materialGenerationTimer.stop();
         }
         ScoreBoard scoreBoard = gameSystem.getScoreBoard();
         Team winner = scoreBoard.determineWinner();
@@ -1730,7 +1884,7 @@ public class FinalGuiMain extends JFrame {
             if (pipe.isPunctured()) {
                 builder.append(" LEAK");
             }
-            if (pipe.hasFreeEnd()) {
+            if (hasOpenPipeEnd(pipe)) {
                 builder.append(" FREE");
             }
             builder.append('\n');
@@ -1738,6 +1892,13 @@ public class FinalGuiMain extends JFrame {
         builder.append("\nPumps:\n");
         for (Pump pump : network.getPumps()) {
             builder.append(describe(pump)).append(pump.isBroken() ? " BROKEN" : " OK").append('\n');
+        }
+        builder.append("\nCistern stock:\n");
+        for (Cistern cistern : network.getCisterns()) {
+            builder.append(describe(cistern))
+                    .append(" Pipes: ").append(cistern.getAvailablePipes())
+                    .append(" Pumps: ").append(cistern.getAvailablePumps())
+                    .append('\n');
         }
         return builder.toString();
     }
@@ -2350,6 +2511,7 @@ public class FinalGuiMain extends JFrame {
             drawWaterFlow(g);
             drawElements(g);
             drawPlayers(g);
+            drawMaterialPopups(g);
         }
 
         /**
@@ -2456,7 +2618,7 @@ public class FinalGuiMain extends JFrame {
             double time = java.lang.System.currentTimeMillis() / 150.0;
             g.setColor(new Color(64, 180, 255, 230));
             for (Pipe pipe : network.getPipes()) {
-                if (pipe.isPunctured() || pipe.hasFreeEnd()) {
+                if (pipe.isPunctured() || hasOpenPipeEnd(pipe)) {
                     Tile tile = elementTiles.get(pipe);
                     if (tile != null) {
                         Point center = tile.center();
@@ -2479,7 +2641,45 @@ public class FinalGuiMain extends JFrame {
          * @return true if the pipe is visually flowing
          */
         private boolean isFlowingPipe(Pipe pipe) {
-            return pipe != null && !pipe.isPunctured() && !pipe.hasFreeEnd();
+            return pipe != null && !pipe.isPunctured() && !hasOpenPipeEnd(pipe) && isPipeAlignedForFlow(pipe);
+        }
+
+        /**
+         * Checks whether the pipe sprite is still aligned with its network connection.
+         *
+         * @param pipe pipe to inspect
+         * @return true if rotation allows water to pass visually
+         */
+        private boolean isPipeAlignedForFlow(Pipe pipe) {
+            return pipeRotations.getOrDefault(pipe, 0) == 0;
+        }
+
+        /**
+         * Checks whether all pipes in the spring-to-cistern path are visually aligned.
+         *
+         * @return true if manual water flow may be recalculated
+         */
+        private boolean isVisualWaterPathOpen() {
+            if (network == null) {
+                return true;
+            }
+            for (Spring spring : network.getSprings()) {
+                Pipe output = spring.getOutputPipe();
+                if (output != null && !isPipeAlignedForFlow(output)) {
+                    setMessage("Water flow blocked. Turn the pipe back to connect the route.");
+                    return false;
+                }
+            }
+            for (Pump pump : network.getPumps()) {
+                Pipe input = pump.getActiveInput();
+                Pipe output = pump.getActiveOutput();
+                if ((input != null && !isPipeAlignedForFlow(input))
+                        || (output != null && !isPipeAlignedForFlow(output))) {
+                    setMessage("Water flow blocked. Turn the pipe back to connect the route.");
+                    return false;
+                }
+            }
+            return true;
         }
 
         /**
@@ -2534,6 +2734,33 @@ public class FinalGuiMain extends JFrame {
             }
         }
 
+        /**
+         * Draws temporary material-generation popups above cisterns.
+         *
+         * @param g graphics context
+         */
+        private void drawMaterialPopups(Graphics2D g) {
+            long now = java.lang.System.currentTimeMillis();
+            materialPopups.entrySet().removeIf(entry -> entry.getValue().expiresAt <= now);
+            g.setFont(readableFont(11f, Font.BOLD));
+            FontMetrics metrics = g.getFontMetrics();
+            for (Map.Entry<Cistern, MaterialPopup> entry : materialPopups.entrySet()) {
+                Tile tile = elementTiles.get(entry.getKey());
+                if (tile == null) {
+                    continue;
+                }
+                String text = entry.getValue().text;
+                Point center = tile.center();
+                int width = metrics.stringWidth(text) + 14;
+                int x = center.x - width / 2;
+                int y = center.y - 58;
+                g.setColor(new Color(18, 18, 18, 220));
+                g.fillRoundRect(x, y, width, 22, 6, 6);
+                g.setColor(new Color(255, 226, 77));
+                g.drawRoundRect(x, y, width, 22, 6, 6);
+                g.drawString(text, x + 7, y + 15);
+            }
+        }
         /**
          * Draws players on top of their current pipe or pump tile.
          *
@@ -2601,7 +2828,7 @@ public class FinalGuiMain extends JFrame {
             }
             if (element instanceof Pipe) {
                 Pipe pipe = (Pipe) element;
-                if (pipe.isPunctured() || pipe.hasFreeEnd()) {
+                if (pipe.isPunctured()) {
                     return image("brokenpaper", "fixedpipe");
                 }
                 int rotation = pipeRotations.getOrDefault(pipe, 0);
@@ -2798,6 +3025,27 @@ public class FinalGuiMain extends JFrame {
         }
     }
 
+    /**
+     * Temporary text shown on the map for generated cistern materials.
+     */
+    private static final class MaterialPopup {
+        /** Popup text. */
+        private final String text;
+
+        /** Expiration time in milliseconds. */
+        private final long expiresAt;
+
+        /**
+         * Creates a material popup.
+         *
+         * @param text popup text
+         * @param expiresAt expiration time
+         */
+        private MaterialPopup(String text, long expiresAt) {
+            this.text = text;
+            this.expiresAt = expiresAt;
+        }
+    }
     /**
      * Toolbar action identifiers.
      */

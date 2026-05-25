@@ -92,18 +92,26 @@ public class WaterFlowManager {
             }
 
             Pump nextPump = findConnectedPump(currentPipe, previousElement);
-            if (nextPump == null || !visited.add(nextPump)) {
-                registerLeakedWater(waterAmount);
-                return;
+            if (nextPump != null) {
+                if (!visited.add(nextPump) || !canFlowThroughPump(nextPump, currentPipe)) {
+                    registerLeakedWater(waterAmount);
+                    return;
+                }
+
+                previousElement = nextPump;
+                currentPipe = nextPump.getActiveOutput();
+                continue;
             }
 
-            if (!canFlowThroughPump(nextPump, currentPipe)) {
-                registerLeakedWater(waterAmount);
-                return;
+            Pipe nextPipe = findConnectedPipe(currentPipe, previousElement);
+            if (nextPipe != null) {
+                previousElement = currentPipe;
+                currentPipe = nextPipe;
+                continue;
             }
 
-            previousElement = nextPump;
-            currentPipe = nextPump.getActiveOutput();
+            registerLeakedWater(waterAmount);
+            return;
         }
 
         registerLeakedWater(waterAmount);
@@ -142,6 +150,25 @@ public class WaterFlowManager {
             }
             if (neighbor instanceof Pump) {
                 return (Pump) neighbor;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds the next connected pipe, excluding the previous element.
+     *
+     * @param pipe current pipe
+     * @param previous previous element in the traversal
+     * @return connected pipe, or null if none exists
+     */
+    private Pipe findConnectedPipe(Pipe pipe, NetworkElement previous) {
+        for (NetworkElement neighbor : pipe.getNeighbors()) {
+            if (neighbor == previous) {
+                continue;
+            }
+            if (neighbor instanceof Pipe) {
+                return (Pipe) neighbor;
             }
         }
         return null;

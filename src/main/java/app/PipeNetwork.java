@@ -199,6 +199,12 @@ public class PipeNetwork {
         }
 
         List<NetworkElement> oldNeighbors = new ArrayList<>(targetPipe.getNeighbors());
+        NetworkElement firstNeighbor = oldNeighbors.size() > 0 ? oldNeighbors.get(0) : null;
+        NetworkElement secondNeighbor = oldNeighbors.size() > 1 ? oldNeighbors.get(1) : null;
+        int firstRole = flowRoleForNeighbor(firstNeighbor, targetPipe, new ArrayList<NetworkElement>());
+        int secondRole = flowRoleForNeighbor(secondNeighbor, targetPipe, new ArrayList<NetworkElement>());
+        PumpDirection firstDirection = capturePumpDirection(firstNeighbor, targetPipe);
+        PumpDirection secondDirection = capturePumpDirection(secondNeighbor, targetPipe);
         Player occupant = targetPipe.getOccupant();
         int capacity = targetPipe.getCapacity();
         int water = targetPipe.getCurrentWater();
@@ -217,26 +223,170 @@ public class PipeNetwork {
         connectElements(firstSegment, pump);
         connectElements(pump, secondSegment);
 
-        if (oldNeighbors.size() > 0) {
-            connectElements(oldNeighbors.get(0), firstSegment);
+        if (firstNeighbor != null) {
+            connectElements(firstNeighbor, firstSegment);
+            closeReconnectedPipeEnd(firstNeighbor, firstSegment);
+            restorePumpDirection(firstNeighbor, firstSegment, firstDirection);
         }
-        if (oldNeighbors.size() > 1) {
-            connectElements(oldNeighbors.get(1), secondSegment);
+        if (secondNeighbor != null) {
+            connectElements(secondNeighbor, secondSegment);
+            closeReconnectedPipeEnd(secondNeighbor, secondSegment);
+            restorePumpDirection(secondNeighbor, secondSegment, secondDirection);
         }
 
-        pump.setDirection(firstSegment, secondSegment);
-
-        for (Spring spring : springs) {
-            if (spring.getOutputPipe() == targetPipe) {
-                spring.setOutputPipe(firstSegment);
-            }
-        }
+        updateSpringOutputAfterPumpInsert(targetPipe, firstNeighbor, firstSegment, secondNeighbor, secondSegment);
+        orientInsertedPump(pump, firstSegment, firstRole, secondSegment, secondRole);
 
         if (occupant != null) {
             occupant.setPosition(pump);
         }
     }
 
+    /**
+     * Captures how a neighboring pump used the pipe that is about to be split.
+     *
+     * @param neighbor old neighbor of the split pipe
+     * @param replacedPipe pipe that will be removed
+     * @return captured pump direction information
+     */
+    private PumpDirection capturePumpDirection(NetworkElement neighbor, Pipe replacedPipe) {
+        if (!(neighbor instanceof Pump)) {
+            return new PumpDirection(false, false, null, null);
+        }
+        Pump pump = (Pump) neighbor;
+        return new PumpDirection(pump.getActiveInput() == replacedPipe,
+                pump.getActiveOutput() == replacedPipe,
+                pump.getActiveInput(), pump.getActiveOutput());
+    }
+
+    /**
+     * Restores a neighboring pump direction after the split pipe is replaced.
+     *
+     * @param neighbor old neighbor of the split pipe
+     * @param replacement replacement pipe segment
+     * @param direction captured direction before removal
+     */
+    private void restorePumpDirection(NetworkElement neighbor, Pipe replacement,
+            PumpDirection direction) {
+        if (!(neighbor instanceof Pump) || direction == null) {
+            return;
+        }
+        Pump pump = (Pump) neighbor;
+        if (direction.replacedInput && direction.previousOutput != null) {
+            pump.setDirection(replacement, direction.previousOutput);
+        } else if (direction.replacedOutput && direction.previousInput != null) {
+            pump.setDirection(direction.previousInput, replacement);
+        }
+    }
+    /**
+     * Clears the free-end flag on an old neighboring pipe after reconnecting it.
+     *
+     * @param neighbor old neighbor of the split pipe
+     * @param replacement replacement segment connected to that neighbor
+     */
+    private void closeReconnectedPipeEnd(NetworkElement neighbor, Pipe replacement) {
+        if (neighbor instanceof Pipe) {
+            Pipe pipe = (Pipe) neighbor;
+            if (pipe.hasFreeEnd() && pipe.isAdjacentTo(replacement)) {
+                pipe.connectFreeEnd(replacement);
+            }
+        }
+    }
+
+    /**
+     * Reassigns a spring output when the spring was connected to the split pipe.
+     *
+     * @param targetPipe original split pipe
+     * @param firstNeighbor first old neighbor
+     * @param firstSegment first replacement segment
+     * @param secondNeighbor second old neighbor
+     * @param secondSegment second replacement segment
+     */
+    private void updateSpringOutputAfterPumpInsert(Pipe targetPipe, NetworkElement firstNeighbor,
+            Pipe firstSegment, NetworkElement secondNeighbor, Pipe secondSegment) {
+        for (Spring spring : springs) {
+            if (spring.getOutputPipe() == targetPipe) {
+                if (spring == secondNeighbor) {
+                    spring.setOutputPipe(secondSegment);
+                } else if (spring == firstNeighbor) {
+                    spring.setOutputPipe(firstSegment);
+                } else {
+                    spring.setOutputPipe(firstSegment);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets the inserted pump direction to preserve the original water route.
+     *
+     * @param pump inserted pump
+     * @param firstSegment first replacement segment
+     * @param firstRole flow role of the first old neighbor
+     * @param secondSegment second replacement segment
+     * @param secondRole flow role of the second old neighbor
+     */
+    private void orientInsertedPump(Pump pump, Pipe firstSegment, int firstRole,
+            Pipe secondSegment, int secondRole) {
+        Pipe input = firstSegment;
+        Pipe output = secondSegment;
+
+        if (firstRole < 0 || secondRole > 0) {
+            input = secondSegment;
+            output = firstSegment;
+        } else if (firstRole > 0 || secondRole < 0) {
+            input = firstSegment;
+            output = secondSegment;
+        }
+
+        pump.setDirection(input, output);
+    }
+
+    /**
+     * Determines whether water reaches or leaves the split pipe through a neighbor.
+     *
+     * @param neighbor inspected neighbor
+     * @param currentPipe pipe connected to the neighbor
+     * @param visited already inspected elements
+     * @return 1 for upstream, -1 for downstream, 0 when unknown
+     */
+    private int flowRoleForNeighbor(NetworkElement neighbor, Pipe currentPipe,
+            List<NetworkElement> visited) {
+        if (neighbor == null || currentPipe == null || visited.contains(neighbor)) {
+            return 0;
+        }
+        visited.add(neighbor);
+
+        if (neighbor instanceof Spring) {
+            return ((Spring) neighbor).getOutputPipe() == currentPipe ? 1 : 0;
+        }
+        if (neighbor instanceof Cistern) {
+            return -1;
+        }
+        if (neighbor instanceof Pump) {
+            Pump pump = (Pump) neighbor;
+            if (pump.getActiveOutput() == currentPipe) {
+                return 1;
+            }
+            if (pump.getActiveInput() == currentPipe) {
+                return -1;
+            }
+            return 0;
+        }
+        if (neighbor instanceof Pipe) {
+            for (NetworkElement next : neighbor.getNeighbors()) {
+                if (next == currentPipe) {
+                    continue;
+                }
+                int role = flowRoleForNeighbor(next, (Pipe) neighbor, visited);
+                if (role != 0) {
+                    return role;
+                }
+            }
+        }
+
+        return 0;
+    }
     /**
      * Finds an element by its identifier.
      *
@@ -324,6 +474,23 @@ public class PipeNetwork {
         return Collections.unmodifiableList(cisterns);
     }
 
+    /**
+     * Stores the part of a pump direction affected by pipe replacement.
+     */
+    private static final class PumpDirection {
+        private final boolean replacedInput;
+        private final boolean replacedOutput;
+        private final Pipe previousInput;
+        private final Pipe previousOutput;
+
+        private PumpDirection(boolean replacedInput, boolean replacedOutput,
+                Pipe previousInput, Pipe previousOutput) {
+            this.replacedInput = replacedInput;
+            this.replacedOutput = replacedOutput;
+            this.previousInput = previousInput;
+            this.previousOutput = previousOutput;
+        }
+    }
     /**
      * Checks if two elements may be connected in this game model.
      *

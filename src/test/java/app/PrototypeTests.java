@@ -169,7 +169,7 @@ public class PrototypeTests {
         try {
             createLinearFixture();
             Team team = new Team("Plumbers");
-            Plumber plumber = new Plumber("Ada", team, pump);
+            Plumber plumber = new Plumber("Ada", team, pipe2);
             cistern.generatePump();
             plumber.collectPumpFromCistern(cistern);
             plumber.startTurn();

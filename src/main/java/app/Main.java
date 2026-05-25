@@ -76,6 +76,11 @@ public class Main {
 
     /**
      * Starts one configured game.
+     *
+     * <p>The setup creates the two teams, validates the minimum team sizes,
+     * builds the initial network, and then delegates execution to the turn
+     * loop. It is used by the prototype test cases to prove the start-game
+     * requirement independently from the final Swing GUI.</p>
      */
     private static void startGame() {
         Team plumberTeam = new Team("Plumbers");
@@ -291,6 +296,10 @@ public class Main {
 
     /**
      * Repairs the pipe under the plumber.
+     *
+     * @param plumber plumber attempting the repair
+     * @param system active game system used for recalculating water flow
+     * @return true when the repair consumed the action for this turn
      */
     private static boolean repairPipe(Plumber plumber, app.System system) {
         if (!(plumber.getPosition() instanceof Pipe)) {
@@ -304,6 +313,10 @@ public class Main {
 
     /**
      * Repairs the pump under the plumber.
+     *
+     * @param plumber plumber attempting the repair
+     * @param system active game system used for recalculating water flow
+     * @return true when the repair consumed the action for this turn
      */
     private static boolean repairPump(Plumber plumber, app.System system) {
         if (!(plumber.getPosition() instanceof Pump)) {
@@ -317,6 +330,10 @@ public class Main {
 
     /**
      * Punctures the pipe under the saboteur.
+     *
+     * @param saboteur saboteur attempting to create a leak
+     * @param system active game system used for recalculating water flow
+     * @return true when the puncture consumed the action for this turn
      */
     private static boolean puncturePipe(Saboteur saboteur, app.System system) {
         if (!(saboteur.getPosition() instanceof Pipe)) {
@@ -330,6 +347,10 @@ public class Main {
 
     /**
      * Changes pump direction for a plumber.
+     *
+     * @param plumber plumber standing on the selected pump
+     * @param system active game system used for recalculating water flow
+     * @return true when the direction change consumed the action
      */
     private static boolean changePumpDirection(Plumber plumber, app.System system) {
         if (!(plumber.getPosition() instanceof Pump)) {
@@ -349,6 +370,10 @@ public class Main {
 
     /**
      * Changes pump direction for a saboteur.
+     *
+     * @param saboteur saboteur standing on the selected pump
+     * @param system active game system used for recalculating water flow
+     * @return true when the direction change consumed the action
      */
     private static boolean changePumpDirection(Saboteur saboteur, app.System system) {
         if (!(saboteur.getPosition() instanceof Pump)) {
@@ -368,6 +393,10 @@ public class Main {
 
     /**
      * Connects one free pipe end.
+     *
+     * @param plumber plumber performing the connection
+     * @param system active game system containing the current network
+     * @return true when a free end was connected and the turn can advance
      */
     private static boolean connectPipeEnd(Plumber plumber, app.System system) {
         PipeNetwork network = system.getNetwork();
@@ -400,6 +429,10 @@ public class Main {
 
     /**
      * Disconnects a selected pipe from a selected neighbor.
+     *
+     * @param network network containing the pipe and neighbor
+     * @param system active game system used for recalculating water flow
+     * @return true when the selected connection was removed
      */
     private static boolean disconnectPipeEnd(PipeNetwork network, app.System system) {
         Pipe pipe = asPipe(network.findElementById(readInt("Pipe ID to disconnect: ", -1, -1)));
@@ -422,6 +455,10 @@ public class Main {
 
     /**
      * Collects a pump from a reachable cistern.
+     *
+     * @param plumber plumber who will carry the collected pump
+     * @param network network used to find reachable cisterns
+     * @return true when a pump was actually collected
      */
 private static boolean collectPump(Plumber plumber, PipeNetwork network) {
     Cistern cistern = selectReachableCistern(plumber, network);
@@ -437,6 +474,10 @@ private static boolean collectPump(Plumber plumber, PipeNetwork network) {
 
     /**
      * Collects a pipe from a reachable cistern.
+     *
+     * @param plumber plumber who will carry the collected pipe
+     * @param network network used to find reachable cisterns
+     * @return true when a pipe was actually collected
      */
     private static boolean collectPipe(Plumber plumber, PipeNetwork network) {
         Cistern cistern = selectReachableCistern(plumber, network);
@@ -450,6 +491,11 @@ private static boolean collectPump(Plumber plumber, PipeNetwork network) {
 
     /**
      * Inserts a carried pump into the current pipe.
+     *
+     * @param plumber plumber carrying the pump
+     * @param network network that receives the new pump element
+     * @param system active game system used for recalculating water flow
+     * @return true when the pump insertion consumed the action
      */
     private static boolean insertPump(Plumber plumber, PipeNetwork network, app.System system) {
         if (!plumber.isCarryingPump() || !(plumber.getPosition() instanceof Pipe)) {
@@ -465,6 +511,11 @@ private static boolean collectPump(Plumber plumber, PipeNetwork network) {
 
     /**
      * Places a carried pipe between two selected elements.
+     *
+     * @param plumber plumber carrying the pipe
+     * @param network network that receives the new pipe element
+     * @param system active game system used for recalculating water flow
+     * @return true when the pipe placement consumed the action
      */
     private static boolean placePipe(Plumber plumber, PipeNetwork network, app.System system) {
         if (!plumber.isCarryingPipe()) {
@@ -486,6 +537,9 @@ private static boolean collectPump(Plumber plumber, PipeNetwork network) {
 
     /**
      * Selects input and output pipes from a pump.
+     *
+     * @param pump pump whose connected pipes are displayed
+     * @return two selected pipes as input and output, or null for invalid input
      */
     private static Pipe[] selectDirection(Pump pump) {
         List<Pipe> connected = pump.getConnectedPipes();
@@ -514,6 +568,10 @@ private static boolean collectPump(Plumber plumber, PipeNetwork network) {
 
     /**
      * Selects a cistern reachable from the plumber's current position.
+     *
+     * @param plumber plumber whose position defines reachability
+     * @param network network containing all cisterns
+     * @return selected reachable cistern, or null when none is available
      */
 private static Cistern selectReachableCistern(Plumber plumber, PipeNetwork network) {
     List<Cistern> reachable = new ArrayList<>();

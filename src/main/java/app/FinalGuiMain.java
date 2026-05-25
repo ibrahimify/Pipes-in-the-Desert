@@ -85,6 +85,18 @@ public class FinalGuiMain extends JFrame {
     /** Number of rows in the playable grid. */
     private static final int GRID_ROWS = 7;
 
+    /** Maximum number of automatically stored pipes in one cistern. */
+    private static final int MAX_PIPES_PER_CISTERN = 3;
+
+    /** Maximum number of automatically stored pumps in one cistern. */
+    private static final int MAX_PUMPS_PER_CISTERN = 3;
+
+    /** Minimum delay for automatic cistern pipe/pump production. */
+    private static final int AUTO_COMPONENT_MIN_DELAY_MS = 7000;
+
+    /** Extra random delay for automatic cistern pipe/pump production. */
+    private static final int AUTO_COMPONENT_RANDOM_DELAY_MS = 1000;
+
     /** Card layout used to switch screens. */
     private final CardLayout cards;
 
@@ -156,6 +168,9 @@ public class FinalGuiMain extends JFrame {
 
     /** Timer that refreshes the HUD. */
     private Timer refreshTimer;
+
+    /** Timer that automatically produces pipes and pumps in cisterns. */
+    private Timer autoComponentProductionTimer;
 
     /** Dash phase shift for flowing water animation. */
     private float dashPhase;
@@ -579,8 +594,8 @@ public class FinalGuiMain extends JFrame {
         addToolbarLabel(toolbar, "OBJECTS");
         addTool(toolbar, "Pick Up Pipe", Tool.PICKUP_PIPE);
         addTool(toolbar, "Pick Up Pump", Tool.PICKUP_PUMP);
-        addTool(toolbar, "Add Pipe", Tool.ADD_PIPE);
-        addTool(toolbar, "Add Pump", Tool.ADD_PUMP);
+        addTool(toolbar, "Place Pipe", Tool.ADD_PIPE);
+        addTool(toolbar, "Place Pump", Tool.ADD_PUMP);
         addToolbarLabel(toolbar, "PIPE TOOLS");
         addTool(toolbar, "Remove Pipe", Tool.REMOVE_PIPE);
         addTool(toolbar, "Connect Pipe", Tool.CONNECT_PIPE);
@@ -794,6 +809,88 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
+     * Starts automatic pipe and pump production for all cisterns.
+     * Each tick happens after a random 7-8 second delay. A cistern only
+     * produces a new component if its stored count is below the limit.
+     */
+    private void startAutoComponentProductionTimer() {
+        if (autoComponentProductionTimer != null) {
+            autoComponentProductionTimer.stop();
+        }
+        autoComponentProductionTimer = new Timer(randomAutoComponentDelay(), e -> {
+            if (gameSystem == null || !gameSystem.isRunning()) {
+                return;
+            }
+            int producedPipes = autoProducePipesInCisterns();
+            int producedPumps = autoProducePumpsInCisterns();
+            autoComponentProductionTimer.setDelay(randomAutoComponentDelay());
+            autoComponentProductionTimer.setInitialDelay(randomAutoComponentDelay());
+            if (producedPipes > 0 || producedPumps > 0) {
+                setMessage("Cistern automatically produced "
+                        + producedPipes + " pipe" + (producedPipes == 1 ? "" : "s")
+                        + " and "
+                        + producedPumps + " pump" + (producedPumps == 1 ? "." : "s."));
+            }
+            refreshView();
+        });
+        autoComponentProductionTimer.setRepeats(true);
+        autoComponentProductionTimer.start();
+    }
+
+    /**
+     * Returns a random automatic component-production delay between 7 and 8 seconds.
+     *
+     * @return delay in milliseconds
+     */
+    private int randomAutoComponentDelay() {
+        return AUTO_COMPONENT_MIN_DELAY_MS + (int) (Math.random() * (AUTO_COMPONENT_RANDOM_DELAY_MS + 1));
+    }
+
+    /**
+     * Produces one pipe in every cistern that is not full.
+     *
+     * @return number of pipes produced
+     */
+    private int autoProducePipesInCisterns() {
+        int produced = 0;
+        if (network == null) {
+            return produced;
+        }
+        for (NetworkElement element : network.getElements()) {
+            if (element instanceof Cistern) {
+                Cistern cistern = (Cistern) element;
+                if (cistern.getAvailablePipes() < MAX_PIPES_PER_CISTERN) {
+                    cistern.generatePipe();
+                    produced++;
+                }
+            }
+        }
+        return produced;
+    }
+
+    /**
+     * Produces one pump in every cistern that is not full.
+     *
+     * @return number of pumps produced
+     */
+    private int autoProducePumpsInCisterns() {
+        int produced = 0;
+        if (network == null) {
+            return produced;
+        }
+        for (NetworkElement element : network.getElements()) {
+            if (element instanceof Cistern) {
+                Cistern cistern = (Cistern) element;
+                if (cistern.getAvailablePumps() < MAX_PUMPS_PER_CISTERN) {
+                    cistern.generatePump();
+                    produced++;
+                }
+            }
+        }
+        return produced;
+    }
+
+    /**
      * Selects a toolbar tool.
      *
      * @param tool selected tool
@@ -815,13 +912,25 @@ public class FinalGuiMain extends JFrame {
     private String instructionFor(Tool tool) {
         switch (tool) {
             case PICKUP_PIPE:
-                return "Select a Cistern connected to your position to pick up a pipe.";
+                return "Select any cistern with an available pipe to pick up a pipe.";
             case PICKUP_PUMP:
-                return "Select a Cistern connected to your position to pick up a pump.";
+                return "Select any cistern with an available pump to pick up a pump.";
             case ADD_PIPE:
-                return "Select a cistern, then click an adjacent empty grid tile to place the carried pipe.";
+                if (gameSystem != null && gameSystem.getCurrentPlayer() instanceof Plumber) {
+                    Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+                    if (plumber.isCarryingPipe()) {
+                        return "You are carrying a pipe. Click an empty tile directly next to your plumber to place it.";
+                    }
+                }
+                return "Pick up a pipe first, then use Place Pipe to put it next to the plumber.";
             case ADD_PUMP:
-                return "Click a pipe you stand on to insert the carried pump.";
+                if (gameSystem != null && gameSystem.getCurrentPlayer() instanceof Plumber) {
+                    Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+                    if (plumber.isCarryingPump()) {
+                        return "You are carrying a pump. Stand on the target pipe and click that pipe to place it.";
+                    }
+                }
+                return "Pick up a pump first, then use Place Pump while standing on the target pipe.";
             case REMOVE_PIPE:
                 return "Click a pipe to remove it.";
             case CONNECT_PIPE:
@@ -939,10 +1048,6 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Cistern cistern = (Cistern) element;
-        if (!currentPlayerCanReach(cistern)) {
-            setMessage("You must stand adjacent to the cistern to pick up a pipe.");
-            return;
-        }
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
         if (plumber.isCarryingPipe()) {
             setMessage("You are already carrying a pipe.");
@@ -970,10 +1075,6 @@ public class FinalGuiMain extends JFrame {
             return;
         }
         Cistern cistern = (Cistern) element;
-        if (!currentPlayerCanReach(cistern)) {
-            setMessage("You must stand adjacent to the cistern to pick up a pump.");
-            return;
-        }
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
         if (plumber.isCarryingPump()) {
             setMessage("You are already carrying a pump.");
@@ -988,18 +1089,23 @@ public class FinalGuiMain extends JFrame {
     }
 
     /**
-     * Adds a pipe to an adjacent empty tile.
+     * Places the carried pipe near the plumber.
+     *
+     * <p>Pipes are produced automatically by cistern timers. This toolbar action
+     * is only for placing a pipe that the plumber is already carrying.</p>
      *
      * @param tile target tile
      * @param element clicked element
      */
     private void addPipeAt(Tile tile, NetworkElement element) {
-        if (!requireCurrentPlayer("Add Pipe", Plumber.class)) {
+        if (!requireCurrentPlayer("Place Pipe", Plumber.class)) {
             return;
         }
+
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+
         if (!plumber.isCarryingPipe()) {
-            setMessage("You must pick up a pipe from a cistern first.");
+            setMessage("Pick up a pipe first, then use Place Pipe to put it next to the plumber.");
             return;
         }
         if (element != null) {
@@ -1049,7 +1155,8 @@ public class FinalGuiMain extends JFrame {
         elementTiles.put(pipe, tile);
         pipeRotations.put(pipe, rotationForPipePlacement(elementTiles.get(anchor), tile));
         selectedElement = pipe;
-        consumeCurrentTurn("Pipe added. It has one free end until connected.");
+        selectedTile = tile;
+        consumeCurrentTurn("Carried pipe placed next to the plumber. It has one free end until connected.");
     }
     /**
      * Selects the pipe sprite rotation from the relative position of the anchor.
@@ -1068,32 +1175,72 @@ public class FinalGuiMain extends JFrame {
         return 0;
     }
     /**
-     * Inserts a pump into a clicked pipe.
+     * Inserts the carried pump into the pipe where the plumber is standing.
+     *
+     * <p>Pumps are produced automatically by cistern timers. This toolbar action
+     * is only for placing a pump that the plumber is already carrying.</p>
      *
      * @param element clicked element
      */
     private void addPumpAt(NetworkElement element) {
-        if (!requireCurrentPlayer("Add Pump", Plumber.class)) {
+        if (!requireCurrentPlayer("Place Pump", Plumber.class)) {
             return;
         }
         Plumber plumber = (Plumber) gameSystem.getCurrentPlayer();
+
         if (!plumber.isCarryingPump()) {
-            setMessage("You must pick up a pump from a cistern first.");
+            setMessage("Pick up a pump first, then use Place Pump while standing on the target pipe.");
             return;
         }
+
+        insertCarriedPumpIntoPipe(plumber, element);
+    }
+
+    /**
+     * Produces one pump at any selected cistern.
+     *
+     * @param element clicked element
+     */
+    private void producePumpAtCistern(NetworkElement element) {
+        if (!(element instanceof Cistern)) {
+            setMessage("Click any cistern to produce a pump, then use Pick Up Pump to carry it.");
+            return;
+        }
+        Cistern cistern = (Cistern) element;
+        if (cistern.getAvailablePumps() >= MAX_PUMPS_PER_CISTERN) {
+            setMessage("This cistern already has the maximum of " + MAX_PUMPS_PER_CISTERN + " stored pumps.");
+            return;
+        }
+        cistern.generatePump();
+        selectedElement = cistern;
+        consumeCurrentTurn("New pump produced at the cistern. Use Pick Up Pump to carry it.");
+    }
+
+    /**
+     * Inserts the carried pump into the pipe where the plumber is standing.
+     *
+     * @param plumber current plumber
+     * @param element clicked element
+     */
+    private void insertCarriedPumpIntoPipe(Plumber plumber, NetworkElement element) {
         if (!(element instanceof Pipe)) {
-            setMessage("Invalid placement. Click a pipe to insert a pump.");
+            setMessage("Invalid placement. Stand on the target pipe, then click that pipe to place the carried pump.");
             return;
         }
-        if (!requireCurrentPosition(element, "Insert Pump")) {
+        if (plumber.getPosition() != element) {
+            setMessage("Place Pump requires the plumber to stand on the target pipe.");
             return;
         }
         Pipe oldPipe = (Pipe) element;
         Tile baseTile = elementTiles.get(oldPipe);
         Pump pump = new Pump(network.generateId());
-        
+
         plumber.insertPump(oldPipe, pump, network);
-        
+        if (plumber.isCarryingPump() || !network.getElements().contains(pump)) {
+            setMessage("Pump could not be inserted here. Stand on the target pipe and try again.");
+            return;
+        }
+
         elementTiles.remove(oldPipe);
         pipeRotations.remove(oldPipe);
 
@@ -1101,7 +1248,7 @@ public class FinalGuiMain extends JFrame {
         pumpRotations.put(pump, 0);
         selectedElement = pump;
         placeNewPipeSegmentsAround(pump, baseTile);
-        consumeCurrentTurn("Pump added into the selected pipe.");
+        consumeCurrentTurn("Carried pump placed into the selected pipe.");
     }
 
     /**
@@ -1878,7 +2025,17 @@ public class FinalGuiMain extends JFrame {
             }
             builder.append("\n");
         }
-        builder.append("Pipes:\n");
+        builder.append("Cistern storage:\n");
+        for (NetworkElement element : network.getElements()) {
+            if (element instanceof Cistern) {
+                Cistern cistern = (Cistern) element;
+                builder.append(describe(cistern))
+                        .append(" Pipes: ").append(cistern.getAvailablePipes()).append("/").append(MAX_PIPES_PER_CISTERN)
+                        .append(" Pumps: ").append(cistern.getAvailablePumps()).append("/").append(MAX_PUMPS_PER_CISTERN)
+                        .append('\n');
+            }
+        }
+        builder.append("\nPipes:\n");
         for (Pipe pipe : network.getPipes()) {
             builder.append(describe(pipe));
             if (pipe.isPunctured()) {
@@ -1967,6 +2124,23 @@ public class FinalGuiMain extends JFrame {
         int rowDistance = Math.abs(pipeTile.row - targetTile.row);
         return (colDistance == 2 && rowDistance == 0) || (rowDistance == 2 && colDistance == 0);
     }
+    /**
+     * Returns a simple sprite rotation based on placement direction.
+     *
+     * @param from origin tile
+     * @param to target tile
+     * @return rotation step used by the renderer
+     */
+    private int rotationFromTo(Tile from, Tile to) {
+        if (from == null || to == null) {
+            return 0;
+        }
+        if (to.row != from.row) {
+            return 1;
+        }
+        return 0;
+    }
+
     /**
      * Checks if two tiles are orthogonally adjacent.
      *
@@ -3056,10 +3230,10 @@ public class FinalGuiMain extends JFrame {
         PICKUP_PIPE("Pick Up Pipe"),
         /** Picks up a pump. */
         PICKUP_PUMP("Pick Up Pump"),
-        /** Adds a pipe to the grid. */
-        ADD_PIPE("Add Pipe"),
-        /** Inserts a pump into a pipe. */
-        ADD_PUMP("Add Pump"),
+        /** Places a carried pipe on the grid. */
+        ADD_PIPE("Place Pipe"),
+        /** Places a carried pump into a pipe. */
+        ADD_PUMP("Place Pump"),
         /** Removes a pipe. */
         REMOVE_PIPE("Remove Pipe"),
         /** Connects a free pipe end. */

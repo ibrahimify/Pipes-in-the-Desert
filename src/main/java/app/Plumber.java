@@ -113,7 +113,13 @@ public class Plumber extends Player {
     }
 
     /**
-     * Collects one available pump from a neighboring cistern.
+     * Collects one available pump from any cistern.
+     *
+     * <p>
+     * GUI rule: after a cistern has produced pumps, a plumber may pick one up
+     * from that cistern without standing next to it. The pump is treated as
+     * inventory and can later be inserted into the pipe where the plumber stands.
+     * </p>
      *
      * @param cistern cistern that stores generated pumps
      */
@@ -121,7 +127,6 @@ public class Plumber extends Player {
         if (!canAct()
                 || cistern == null
                 || carriedPump
-                || !canReachCistern(cistern)
                 || !cistern.hasAvailablePump()) {
             return;
         }
@@ -145,7 +150,7 @@ public class Plumber extends Player {
                 || pump == null
                 || network == null
                 || !carriedPump
-                || !isAtOrAdjacentTo(targetPipe)) {
+                || position != targetPipe) {
             return;
         }
 
@@ -184,7 +189,13 @@ public class Plumber extends Player {
     }
 
     /**
-     * Collects one available pipe from a neighboring cistern.
+     * Collects one available pipe from any cistern.
+     *
+     * <p>
+     * GUI rule: after a cistern has produced pipes, a plumber may pick one up
+     * from that cistern without standing next to it. The pipe is treated as
+     * inventory and can later be placed beside the plumber.
+     * </p>
      *
      * @param cistern cistern that stores generated pipes
      */
@@ -192,7 +203,6 @@ public class Plumber extends Player {
         if (!canAct()
                 || cistern == null
                 || carriedPipe
-                || !canReachCistern(cistern)
                 || !cistern.hasAvailablePipe()) {
             return;
         }

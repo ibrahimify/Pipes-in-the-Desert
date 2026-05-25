@@ -136,10 +136,13 @@ public class Pipe extends NetworkElement {
                 java.lang.System.out.println("[Pipe:" + id + "] Target pump rejected the connection.");
                 return false;
             }
-        } else {
-            addNeighbor(target);
-            target.addNeighbor(this);
         }
+
+        // Keep the logical graph in sync for every target type, including pumps.
+        // Without this, the pipe may look connected to a pump visually, but
+        // player movement and network adjacency checks will still fail.
+        addNeighbor(target);
+        target.addNeighbor(this);
 
         freeEnd = false;
 

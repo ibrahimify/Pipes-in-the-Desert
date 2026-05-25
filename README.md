@@ -106,7 +106,7 @@ This repository contains the project of Team A under the supervision of Dr. Ball
 | Ilgin Tunc             | [ilgintunc](https://github.com/ilgintunc)   | TDQWFF | ilgintunc11@gmail.com |
 | Muhammad Hameez Khan   | [Hameez1khan](https://github.com/Hameez1khan) | TFBB32 | hameezkhan993@gmail.com |
 | Yahya Akhrikhar        | [yahyaakh](https://github.com/yahyaakh)     | K20UXP | yahyaakhrikhar02@gmail.com |
-| Aasif Mohd             |                                             | OI6VE6 | aasifuk1122@gmail.com |
+| Aasif Mohd             | [Mohdaasif97](https://github.com/Mohdaasif97)     | OI6VE6 | aasifuk1122@gmail.com |
 
 ## Schedule Highlights
 

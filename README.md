@@ -31,7 +31,7 @@ Pipes in the Desert/
 
 The old `code/` layout has been archived under `archive/legacy-code-layout/`. Packaged release output is not required for normal development; use the root Maven project instead.
 
-## Documentation Status (as of May 26)
+## Documentation Status (as of May 29)
 
 Completed:
 - 00 - Cover
@@ -45,9 +45,7 @@ Completed:
 - 10 - Prototype Program
 - 11 - Plans for GUI
 - 13 - GUI program
-
-Upcoming:
-- 14 - Summary (May 29)
+- 14 - Summary
 
 ## Build & Run
 
@@ -83,7 +81,7 @@ The game opens in a 1920x1080 Java Swing window. Use the main menu to start a ga
 <details>
 <summary>Game controls and expected results</summary>
 
-- **Start Game**: opens the setup screen. Add four players and keep at least one Plumber and one Saboteur.
+- **Start Game**: opens the setup screen. Add four players and keep at least two Plumbers and two Saboteurs.
 - **Move**: select `Move`, then click an adjacent pipe or pump. Players can stand only on pipes and pumps. Multiple players may share a pump, but only one player may stand on a pipe.
 - **Add Pipe**: select the cistern, then click an adjacent free tile. A new pipe is created with one end connected to the cistern and the other end free, matching the problem definition.
 - **Connect Pipe**: select a pipe that has a free end, then click an adjacent spring, pump, cistern, or pipe endpoint. If the selected pipe has no free end, the game rejects the action.
